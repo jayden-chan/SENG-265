@@ -30,24 +30,27 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 
 #define MAX_BUF_LEN 40000
+#define WIDTH_CHARS 7
+#define MRGN_CHARS 6
 
 /*
  * The Settings struct stores the formatting flags
  * found in the supplied text file.
  */
 typedef struct Settings {
-    bool width;
-    bool mrgn;
-    bool fmt;
+        int width;
+        int mrgn;
+        bool fmt;
 } Settings;
 
 /* Function prototypes */
 bool file_exists(const char *file_name);
 bool load_file(const char *file_name, char buffer[]);
 void print_buffer(const char *buffer, const int len);
-void parse_settings(const char *buffer, Settings *s);
+void parse_settings(const char *buffer, const int len, Settings *s);
 
 int main(int argc, char *argv[])
 {
@@ -71,27 +74,9 @@ int main(int argc, char *argv[])
         print_buffer(buffer, MAX_BUF_LEN);
 
         Settings s;
-        parse_settings(buffer, &s);
+        parse_settings(buffer, MAX_BUF_LEN, &s);
 
         exit(0);
-}
-
-/*
- * file_exists checks to see whether the specified file exists
- *
- * @param file_name The path to the file
- * @return True if the file exists, false if it does not
- */
-bool file_exists(const char *file_name)
-{
-        FILE* file = fopen(file_name, "r");
-
-        if (file != NULL) {
-                fclose(file);
-                return true;
-        }
-
-        return false;
 }
 
 /*
@@ -120,6 +105,66 @@ bool load_file(const char *file_name, char *buffer)
 }
 
 /*
+ * parse_settings takes a text buffer and parses the settings flags
+ * such as ?width and ?mrgn. The settings will be loaded into the
+ * supplied Settings struct.
+ *
+ * @param buffer The buffer to parse
+ * @param len    The length of the buffer
+ * @param s      The settings to load into
+ */
+void parse_settings(const char *buffer, const int len, Settings *s)
+{
+        s->fmt = true;
+        char width_buffer[10];
+        char mrgn_buffer[10];
+
+        for (int i = 0; i < len; i++) {
+                if (i < len-1 && buffer[i] == '?') {
+                        int j = 0;
+                        switch (buffer[i+1]) {
+                        case 'w':
+                                while (isdigit(buffer[j+i+WIDTH_CHARS])) {
+                                        width_buffer[j] = buffer[j+i+WIDTH_CHARS];
+                                        j++;
+                                }
+                                width_buffer[j] = '\0';
+                                s->width = atoi(width_buffer);
+                                break;
+                        case 'm':
+                                while (isdigit(buffer[j+i+MRGN_CHARS])) {
+                                        mrgn_buffer[j] = buffer[j+i+MRGN_CHARS];
+                                        j++;
+                                }
+                                mrgn_buffer[j] = '\0';
+                                s->mrgn = atoi(mrgn_buffer);
+                                break;
+                        }
+                } else if (buffer[i] == '\0') {
+                        break;
+                }
+        }
+}
+
+/*
+ * file_exists checks to see whether the specified file exists
+ *
+ * @param file_name The path to the file
+ * @return True if the file exists, false if it does not
+ */
+bool file_exists(const char *file_name)
+{
+        FILE* file = fopen(file_name, "r");
+
+        if (file != NULL) {
+                fclose(file);
+                return true;
+        }
+
+        return false;
+}
+
+/*
  * print_buffer prints the contents of the supplied buffer
  * into stdout. Currently only used for debugging.
  *
@@ -135,17 +180,6 @@ void print_buffer(const char *buffer, const int len)
                 }
                 printf("%c", buffer[i]);
         }
+        printf("\n");
 }
 
-/*
- * parse_settings takes a text buffer and parses the settings flags
- * such as ?width and ?mrgn. The settings will be loaded into the
- * supplied Settings struct.
- *
- * @param buffer The buffer to parse
- * @param s      The settings to load into
- */
-void parse_settings(const char *buffer, Settings *s)
-{
-    // TODO: Implement settings parsing function
-}
