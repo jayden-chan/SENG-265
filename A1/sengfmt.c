@@ -92,19 +92,27 @@ int main(int argc, char *argv[])
  */
 bool load_file(const char *file_name, char *buffer)
 {
+        /* Load the file */
         FILE *fp = fopen(file_name, "r");
+
+        /* If the file isn't NULL, open */
         if (fp != NULL) {
                 size_t newLen = fread(buffer, sizeof(char), MAX_BUF_LEN, fp);
+
+                /* If there is an error, close and return false */
                 if (ferror(fp) != 0) {
                         fclose(fp);
                         return false;
                 } else {
-                        buffer[newLen++] = '\0'; /* Just to be safe. */
+                        buffer[newLen++] = '\0'; /* Terminate string */
                 }
 
                 fclose(fp);
+                return true;
         }
-        return true;
+
+        /* If file is NULL return false, indicating failure */
+        return false;
 }
 
 /*
@@ -178,13 +186,16 @@ void strip_space(char *buffer)
  */
 bool file_exists(const char *file_name)
 {
+        /* Try opening the file */
         FILE* file = fopen(file_name, "r");
 
+        /* If the file isn't NULL it exists, return true */
         if (file != NULL) {
                 fclose(file);
                 return true;
         }
 
+        /* File doesn't exist, return false */
         return false;
 }
 
@@ -197,9 +208,16 @@ bool file_exists(const char *file_name)
 void print_buffer(char *buffer)
 {
         char *ptr = buffer;
+
+        /* Advance the pointer through the buffer until it
+         * reaches the null terminator, printing each character
+         * as we go
+         */
         while (*ptr != '\0') {
                 printf("%c", *ptr);
                 ptr++;
         }
+
+        /* Add a newline at the end */
         printf("\n");
 }
