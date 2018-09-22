@@ -33,9 +33,21 @@
 
 #define MAX_BUF_LEN 40000
 
+/*
+ * The Settings struct stores the formatting flags
+ * found in the supplied text file.
+ */
+typedef struct Settings {
+    bool width;
+    bool mrgn;
+    bool fmt;
+} Settings;
+
+/* Function prototypes */
 bool file_exists(const char *file_name);
 bool load_file(const char *file_name, char buffer[]);
 void print_buffer(const char *buffer, const int len);
+void parse_settings(const char *buffer, Settings *s);
 
 int main(int argc, char *argv[])
 {
@@ -57,6 +69,10 @@ int main(int argc, char *argv[])
         }
 
         print_buffer(buffer, MAX_BUF_LEN);
+
+        Settings s;
+        parse_settings(buffer, &s);
+
         exit(0);
 }
 
@@ -119,4 +135,17 @@ void print_buffer(const char *buffer, const int len)
                 }
                 printf("%c", buffer[i]);
         }
+}
+
+/*
+ * parse_settings takes a text buffer and parses the settings flags
+ * such as ?width and ?mrgn. The settings will be loaded into the
+ * supplied Settings struct.
+ *
+ * @param buffer The buffer to parse
+ * @param s      The settings to load into
+ */
+void parse_settings(const char *buffer, Settings *s)
+{
+    // TODO: Implement settings parsing function
 }
