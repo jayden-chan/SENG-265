@@ -29,10 +29,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
-bool file_exists(const char* file_name);
+#define MAX_BUF_LEN 40000
 
-int main(int argc, char* argv[]) 
+bool file_exists(const char *file_name);
+bool load_file(const char *file_name, char buffer[]);
+void print_buffer(const char *buffer, const int len);
+
+int main(int argc, char *argv[])
 {
         if (argc < 2) {
                 fprintf(stderr, "ERROR: Not enough arguments. You must specify a file.\n");
@@ -44,10 +49,20 @@ int main(int argc, char* argv[])
                 exit(1);
         }
 
+        char buffer[MAX_BUF_LEN + 1];
+        load_file(argv[1], buffer);
+        print_buffer(buffer, MAX_BUF_LEN);
+
         exit(0);
 }
 
-bool file_exists(const char* file_name)
+/*
+ * file_exists checks to see whether the specified file exists
+ *
+ * @param file_name The path to the file
+ * @return True if the file exists, false if it does not
+ */
+bool file_exists(const char *file_name)
 {
         FILE* file = fopen(file_name, "r");
 
@@ -57,4 +72,47 @@ bool file_exists(const char* file_name)
         }
 
         return false;
+}
+
+/*
+ * load_file reads the specified file and loads the characters
+ * into the supplied buffer array.
+ *
+ * @param file_name The path of the file to read
+ * @param buffer    The buffer to load the file into
+ * @return          True if the file was read successfully, false otherwise
+ */
+bool load_file(const char *file_name, char *buffer)
+{
+        FILE *fp = fopen(file_name, "r");
+        if (fp != NULL) {
+                size_t newLen = fread(buffer, sizeof(char), MAX_BUF_LEN, fp);
+                if (ferror(fp) != 0) {
+                        fputs("ERROR: Reading file failed", stderr);
+                        fclose(fp);
+                        return false;
+                } else {
+                        buffer[newLen++] = '\0'; /* Just to be safe. */
+                }
+
+                fclose(fp);
+        }
+        return true;
+}
+
+/*
+ * print_buffer prints the contents of the supplied buffer
+ * into stdout. Currently only used for debugging.
+ *
+ * @param buffer The buffer to print
+ * @param len    The length of the buffer
+ */
+void print_buffer(const char *buffer, const int len)
+{
+        for(int i = 0; i < len; i++) {
+                if (buffer[i] == '\0') {
+                        break;
+                }
+                printf("%c", buffer[i]);
+        }
 }

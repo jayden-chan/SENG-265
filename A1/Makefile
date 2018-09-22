@@ -1,6 +1,6 @@
 .default: build
 
 build:
-	gcc -Wall -ansi sengfmt.c -o main
+	gcc -Wall -ansi -std=c99 sengfmt.c -o main
 
 .PHONY: build
