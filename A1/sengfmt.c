@@ -49,8 +49,9 @@ typedef struct Settings {
 /* Function prototypes */
 bool file_exists(const char *file_name);
 bool load_file(const char *file_name, char buffer[]);
-void print_buffer(const char *buffer, const int len);
+void print_buffer(char *buffer);
 void parse_settings(const char *buffer, const int len, Settings *s);
+void strip_space(char *buffer);
 
 int main(int argc, char *argv[])
 {
@@ -71,10 +72,12 @@ int main(int argc, char *argv[])
                 exit(1);
         }
 
-        print_buffer(buffer, MAX_BUF_LEN);
+        print_buffer(buffer);
+        strip_space(buffer);
+        print_buffer(buffer);
 
-        Settings s;
-        parse_settings(buffer, MAX_BUF_LEN, &s);
+        /* Settings s; */
+        /* parse_settings(buffer, MAX_BUF_LEN, &s); */
 
         exit(0);
 }
@@ -123,27 +126,48 @@ void parse_settings(const char *buffer, const int len, Settings *s)
                 if (i < len-1 && buffer[i] == '?') {
                         int j = 0;
                         switch (buffer[i+1]) {
-                        case 'w':
-                                while (isdigit(buffer[j+i+WIDTH_CHARS])) {
-                                        width_buffer[j] = buffer[j+i+WIDTH_CHARS];
-                                        j++;
-                                }
-                                width_buffer[j] = '\0';
-                                s->width = atoi(width_buffer);
-                                break;
-                        case 'm':
-                                while (isdigit(buffer[j+i+MRGN_CHARS])) {
-                                        mrgn_buffer[j] = buffer[j+i+MRGN_CHARS];
-                                        j++;
-                                }
-                                mrgn_buffer[j] = '\0';
-                                s->mrgn = atoi(mrgn_buffer);
-                                break;
+                                case 'w':
+                                        while (isdigit(buffer[j+i+WIDTH_CHARS])) {
+                                                width_buffer[j] = buffer[j+i+WIDTH_CHARS];
+                                                j++;
+                                        }
+                                        width_buffer[j] = '\0';
+                                        s->width = atoi(width_buffer);
+                                        break;
+                                case 'm':
+                                        while (isdigit(buffer[j+i+MRGN_CHARS])) {
+                                                mrgn_buffer[j] = buffer[j+i+MRGN_CHARS];
+                                                j++;
+                                        }
+                                        mrgn_buffer[j] = '\0';
+                                        s->mrgn = atoi(mrgn_buffer);
+                                        break;
                         }
                 } else if (buffer[i] == '\0') {
                         break;
                 }
         }
+}
+
+void strip_space(char *buffer)
+{
+        char *dest = buffer;
+
+        /* Loop through entire buffer */
+        while (*buffer != '\0') {
+                if (*buffer == '\n') {
+                        *buffer = ' '; /* Replace newlines with spaces */
+                }
+
+                while (*buffer == ' ' && *(buffer + 1) == ' ') {
+                        buffer++;  /* Skip if there are 2 consecutive spaces */
+                }
+
+                /* Overwrite buffer at current dest location */
+                *dest++ = *buffer++;
+        }
+        /* Terminate the string */
+        *dest = '\0';
 }
 
 /*
@@ -169,17 +193,13 @@ bool file_exists(const char *file_name)
  * into stdout. Currently only used for debugging.
  *
  * @param buffer The buffer to print
- * @param len    The length of the buffer
  */
-void print_buffer(const char *buffer, const int len)
+void print_buffer(char *buffer)
 {
-        for(int i = 0; i < len; i++) {
-                /* Stop printing if null terminator is reached */
-                if (buffer[i] == '\0') {
-                        break;
-                }
-                printf("%c", buffer[i]);
+        char *ptr = buffer;
+        while (*ptr != '\0') {
+                printf("%c", *ptr);
+                ptr++;
         }
         printf("\n");
 }
-
