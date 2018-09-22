@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
                 exit(1);
         }
 
-        char buffer[MAX_BUF_LEN + 1];
+        char buffer[MAX_BUF_LEN];
         bool success = load_file(argv[1], buffer);
         if (!success) {
                 fprintf(stderr, "ERROR: File reading failed.\n");
@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
         }
 
         print_buffer(buffer, MAX_BUF_LEN);
-
         exit(0);
 }
 
@@ -114,6 +113,7 @@ bool load_file(const char *file_name, char *buffer)
 void print_buffer(const char *buffer, const int len)
 {
         for(int i = 0; i < len; i++) {
+                /* Stop printing if null terminator is reached */
                 if (buffer[i] == '\0') {
                         break;
                 }
