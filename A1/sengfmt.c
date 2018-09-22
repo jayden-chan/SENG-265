@@ -50,7 +50,12 @@ int main(int argc, char *argv[])
         }
 
         char buffer[MAX_BUF_LEN + 1];
-        load_file(argv[1], buffer);
+        bool success = load_file(argv[1], buffer);
+        if (!success) {
+                fprintf(stderr, "ERROR: File reading failed.\n");
+                exit(1);
+        }
+
         print_buffer(buffer, MAX_BUF_LEN);
 
         exit(0);
@@ -88,7 +93,6 @@ bool load_file(const char *file_name, char *buffer)
         if (fp != NULL) {
                 size_t newLen = fread(buffer, sizeof(char), MAX_BUF_LEN, fp);
                 if (ferror(fp) != 0) {
-                        fputs("ERROR: Reading file failed", stderr);
                         fclose(fp);
                         return false;
                 } else {
