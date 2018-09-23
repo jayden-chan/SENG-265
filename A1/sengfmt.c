@@ -24,15 +24,19 @@
  * guide, available here:
  *
  * https://www.kernel.org/doc/html/v4.10/process/coding-style.html
+ *
+ * This code does some extra error handling in addition to the main assignment, so it
+ * might be a little longer than most other submissions. The code should be much
+ * easier to adapt for the second part of the assignment though.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
+#include <ctype.h>
 
 #define MAX_BUF_LEN 40000
-#define WIDTH_CHARS 7
-#define MRGN_CHARS 6
 
 /*
  * The Settings struct stores the formatting flags
@@ -45,6 +49,11 @@ typedef struct Settings {
 } Settings;
 
 /* Function prototypes */
+void fmt(char *input, char *output);
+void parse_space(char **input, char **dest, int *curr_width, const Settings s);
+void parse_flag(char *ret, char **input);
+int parse_flag_int(char **input);
+bool parse_flag_bool(char **input);
 bool load_file(const char *file_name, char buffer[]);
 bool file_exists(const char *file_name);
 void print_buffer(char *buffer);
@@ -61,16 +70,153 @@ int main(int argc, char *argv[])
                 exit(1);
         }
 
-        char buffer[MAX_BUF_LEN];
-        bool success = load_file(argv[1], buffer);
+        char input[MAX_BUF_LEN];
+        char output[MAX_BUF_LEN];
+        bool success = load_file(argv[1], input);
         if (!success) {
                 fprintf(stderr, "ERROR: File reading failed.\n");
                 exit(1);
         }
 
-        print_buffer(buffer);
+        fmt(input, output);
+
+        print_buffer(output);
 
         exit(0);
+}
+
+/*
+ * fmt formats the text
+ *
+ * @param input  The input buffer
+ * @param output The output buffer
+ */
+void fmt(char *input, char *output)
+{
+        Settings s = {1, 0, false};
+        char *dest = output;
+
+        int curr_width = 0;
+        while (*input != '\0') {
+                if (s.mrgn >= s.width) {
+                        fprintf(stderr, "ERROR: Margin width equal to or greater than line width.\n");
+                        exit(1);
+                }
+
+                if (isspace(*input) && s.fmt) {
+                        parse_space(&input, &dest, &curr_width, s);
+                        *dest++ = *input++;
+                        curr_width++;
+                } else if (*input == '?') {
+                        char wrd[10];
+                        parse_flag(wrd, &input);
+
+                        if (!strcmp(wrd, "width")) {
+                                s.width = parse_flag_int(&input);
+                                s.fmt = true;
+                        } else if (!strcmp(wrd, "mrgn")) {
+                                s.mrgn = parse_flag_int(&input);
+                        } else if (!strcmp(wrd, "fmt")) {
+                                s.mrgn = parse_flag_bool(&input);
+                        }
+                } else {
+                        *dest++ = *input++;
+                        curr_width++;
+                }
+        }
+}
+
+/*
+ * parse_space handles an occurrence of a space in the text buffer
+ *
+ * @param input      Pointer to the input buffer
+ * @param dest       Pointer to the output buffer
+ * @param curr_width Current line width
+ * @param s          Settings
+ */
+void parse_space(char **input, char **dest, int *curr_width, const Settings s)
+{
+        while (isspace(*(*input)++));
+        (*input)--;
+        (*input)--;
+        **input = ' ';
+
+        char *tmp_ptr = *input;
+        do {
+                (*input)++;
+        } while (!isspace(**input));
+
+        if (*curr_width + (*input - tmp_ptr - 1) + s.mrgn >= s.width) {
+                *(*dest)++ = '\n';
+                tmp_ptr++;
+                *curr_width = 0;
+
+                for (int i = 0; i < s.mrgn; i++) {
+                        *(*dest)++ = ' ';
+                }
+        }
+
+        *input = tmp_ptr;
+}
+
+/*
+ * parse_flag parses a flag when the question mark is
+ * encountered
+ *
+ * @param ret The buffer to load the flag into
+ * @param input Pointer to the input buffer
+ */
+void parse_flag(char *ret, char **input)
+{
+        (*input)++;
+        char *wrd_ptr = ret;
+
+        while (**input != ' ') {
+                *wrd_ptr++ = *(*input)++;
+        }
+
+        *wrd_ptr = '\0';
+        (*input)++;
+}
+
+/*
+ * parse_flag_int parses the integer after the flag
+ *
+ * @param  input Pointer to the input buffer
+ * @return The integer value of the flag
+ */
+int parse_flag_int(char **input)
+{
+        char num[10];
+        char *num_ptr = num;
+
+        while (isdigit(**input)) {
+                *num_ptr++ = *(*input)++;
+        }
+
+        *num_ptr = '\0';
+        (*input)++;
+
+        return atoi(num);
+}
+
+/*
+ * parse_flag_bool parses the bool after the flag
+ *
+ * @param  input Pointer to the input buffer
+ * @return The boolean value of the flag
+ */
+bool parse_flag_bool(char **input)
+{
+        char val[10];
+        char *val_ptr = val;
+        while (isdigit(**input)) {
+                *val_ptr++ = *(*input)++;
+        }
+        *val_ptr = '\0';
+        (*input)++;
+
+        return strcmp(val, "on") == 0;
 }
 
 /*
@@ -135,6 +281,7 @@ bool file_exists(const char *file_name)
  */
 void print_buffer(char *buffer)
 {
+        printf("--- BEGIN BUFFER DUMP ---\n");
         char *ptr = buffer;
 
         /* Advance the pointer through the buffer until it
@@ -148,4 +295,5 @@ void print_buffer(char *buffer)
 
         /* Add a newline at the end */
         printf("[0]\n");
+        printf("--- END BUFFER DUMP ---\n");
 }

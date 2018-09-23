@@ -1,4 +1,5 @@
 ?width 30
+?mrgn 10
 While there    are enough characters   here to
 fill
    at least one line, there is

@@ -1,6 +1,11 @@
-.default: build
+.PHONY: build run
+
+default: build
+
+all: build run
 
 build:
 	gcc -Wall -ansi -std=c99 sengfmt.c -o main
 
-.PHONY: build
+run:
+	./main test/in04.txt
