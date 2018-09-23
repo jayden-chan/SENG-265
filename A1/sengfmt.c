@@ -50,6 +50,7 @@ typedef struct Settings {
 
 /* Function prototypes */
 void fmt(char *input, char *output);
+void apply_margin(char *input, char *output, const Settings s);
 void parse_space(char **input, char **dest, int *curr_width, const Settings s);
 void parse_flag(char *ret, char **input);
 int parse_flag_int(char **input);
@@ -94,7 +95,8 @@ int main(int argc, char *argv[])
 void fmt(char *input, char *output)
 {
         Settings s = {1, 0, false};
-        char *dest = output;
+        char *base_ptr = input;
+        char *dest = input;
 
         int curr_width = 0;
         while (*input != '\0') {
@@ -123,6 +125,29 @@ void fmt(char *input, char *output)
                         *dest++ = *input++;
                         curr_width++;
                 }
+        }
+
+        apply_margin(base_ptr, output, s);
+}
+
+void apply_margin(char *input, char *output, const Settings s)
+{
+        char *ovr_ptr = output;
+
+        for (int i = 0; i < s.mrgn; i++) {
+                *ovr_ptr++ = ' ';
+        }
+
+        while(*input != '\0') {
+                if (*input == '\n') {
+                        *ovr_ptr++ = *input++;
+                        for (int i = 0; i < s.mrgn; i++) {
+                                *ovr_ptr++ = ' ';
+                        }
+                } else {
+                        *ovr_ptr++ = *input++;
+                }
+
         }
 }
 
@@ -277,7 +302,7 @@ bool file_exists(const char *file_name)
  */
 void print_buffer(char *buffer)
 {
-        printf("--- BEGIN BUFFER DUMP ---\n");
+        /* printf("--- BEGIN BUFFER DUMP ---\n"); */
         char *ptr = buffer;
 
         /* Advance the pointer through the buffer until it
@@ -290,6 +315,6 @@ void print_buffer(char *buffer)
         }
 
         /* Add a newline at the end */
-        printf("[0]\n");
-        printf("--- END BUFFER DUMP ---\n");
+        /* printf("[0]\n"); */
+        /* printf("--- END BUFFER DUMP ---\n"); */
 }
