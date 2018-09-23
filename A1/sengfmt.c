@@ -29,8 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <string.h>
-#include <ctype.h>
 
 #define MAX_BUF_LEN 40000
 #define WIDTH_CHARS 7
@@ -47,11 +45,11 @@ typedef struct Settings {
 } Settings;
 
 /* Function prototypes */
-bool file_exists(const char *file_name);
 bool load_file(const char *file_name, char buffer[]);
-void print_buffer(char *buffer);
-void parse_settings(const char *buffer, const int len, Settings *s);
 void strip_space(char *buffer);
+void perform_fmt(char *buffer);
+bool file_exists(const char *file_name);
+void print_buffer(char *buffer);
 
 int main(int argc, char *argv[])
 {
@@ -73,11 +71,12 @@ int main(int argc, char *argv[])
         }
 
         print_buffer(buffer);
+
         strip_space(buffer);
         print_buffer(buffer);
 
-        /* Settings s; */
-        /* parse_settings(buffer, MAX_BUF_LEN, &s); */
+        perform_fmt(buffer);
+        print_buffer(buffer);
 
         exit(0);
 }
@@ -115,48 +114,6 @@ bool load_file(const char *file_name, char *buffer)
         return false;
 }
 
-/*
- * parse_settings takes a text buffer and parses the settings flags
- * such as ?width and ?mrgn. The settings will be loaded into the
- * supplied Settings struct.
- *
- * @param buffer The buffer to parse
- * @param len    The length of the buffer
- * @param s      The settings to load into
- */
-void parse_settings(const char *buffer, const int len, Settings *s)
-{
-        s->fmt = true;
-        char width_buffer[10];
-        char mrgn_buffer[10];
-
-        for (int i = 0; i < len; i++) {
-                if (i < len-1 && buffer[i] == '?') {
-                        int j = 0;
-                        switch (buffer[i+1]) {
-                                case 'w':
-                                        while (isdigit(buffer[j+i+WIDTH_CHARS])) {
-                                                width_buffer[j] = buffer[j+i+WIDTH_CHARS];
-                                                j++;
-                                        }
-                                        width_buffer[j] = '\0';
-                                        s->width = atoi(width_buffer);
-                                        break;
-                                case 'm':
-                                        while (isdigit(buffer[j+i+MRGN_CHARS])) {
-                                                mrgn_buffer[j] = buffer[j+i+MRGN_CHARS];
-                                                j++;
-                                        }
-                                        mrgn_buffer[j] = '\0';
-                                        s->mrgn = atoi(mrgn_buffer);
-                                        break;
-                        }
-                } else if (buffer[i] == '\0') {
-                        break;
-                }
-        }
-}
-
 void strip_space(char *buffer)
 {
         char *dest = buffer;
@@ -176,6 +133,40 @@ void strip_space(char *buffer)
         }
         /* Terminate the string */
         *dest = '\0';
+}
+
+void perform_fmt(char *buffer)
+{
+        Settings s = {30, 0, false};
+        char *dest = buffer;
+        char *last_space = NULL;
+
+        int curr_width = 0;
+        while (*buffer != '\0') {
+                if (*buffer == ' ') {
+                        last_space = buffer;
+
+                        do {
+                                buffer++;
+                        } while (*buffer != ' ');
+
+                        if (curr_width + (buffer - last_space) > s.width) {
+                                *last_space = '\n';
+                                for (int i = 0; i < s.mrgn; i++) {
+                                        last_space++;
+                                        *last_space = ' ';
+                                }
+                                curr_width = 0;
+                        }
+
+                        buffer = last_space;
+                        *dest++ = *buffer++;
+                        curr_width++;
+                } else {
+                        *dest++ = *buffer++;
+                        curr_width++;
+                }
+        }
 }
 
 /*
