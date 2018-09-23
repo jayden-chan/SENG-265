@@ -46,8 +46,6 @@ typedef struct Settings {
 
 /* Function prototypes */
 bool load_file(const char *file_name, char buffer[]);
-void strip_space(char *buffer);
-void perform_fmt(char *input, char *output);
 bool file_exists(const char *file_name);
 void print_buffer(char *buffer);
 
@@ -71,15 +69,6 @@ int main(int argc, char *argv[])
         }
 
         print_buffer(buffer);
-
-        strip_space(buffer);
-        print_buffer(buffer);
-
-        char output[MAX_BUF_LEN];
-        perform_fmt(buffer, output);
-
-        print_buffer(buffer);
-        print_buffer(output);
 
         exit(0);
 }
@@ -115,70 +104,6 @@ bool load_file(const char *file_name, char *buffer)
 
         /* If file is NULL return false, indicating failure */
         return false;
-}
-
-void strip_space(char *buffer)
-{
-        char *dest = buffer;
-
-        /* Loop through entire buffer */
-        while (*buffer != '\0') {
-                if (*buffer == '\n') {
-                        *buffer = ' '; /* Replace newlines with spaces */
-                }
-
-                while (*buffer == ' ' && *(buffer + 1) == ' ') {
-                        buffer++;  /* Skip if there are 2 consecutive spaces */
-                }
-
-                /* Overwrite buffer at current dest location */
-                *dest++ = *buffer++;
-        }
-        /* Terminate the string */
-        *dest = '\0';
-}
-
-void perform_fmt(char *buffer, char *output)
-{
-        Settings s = {40, 0, false};
-        char *save_ptr = NULL;
-        char *dest = output;
-
-        for (int i = 0; i < s.mrgn; i++) {
-                *dest++ = ' ';
-        }
-
-        int curr_width = 0;
-        while (*buffer != '\0') {
-                if (*buffer == ' ') {
-                        save_ptr = buffer; /* Save the previous space */
-
-                        do { /* Advance the pointer until it reaches the next space */
-                                buffer++;
-                        } while (*buffer != ' ');
-
-                        /* If the line has become too long, chop it */
-                        if (curr_width + (buffer - save_ptr - 1) + s.mrgn >= s.width) {
-                                *dest++ = '\n'; /* Chop the line */
-                                curr_width = 0; /* Reset width counter */
-                                save_ptr++;     /* Extend the save pointer by one so that
-                                                   we don't write another space into the
-                                                   output */
-
-                                /* Apply margin */
-                                for (int i = 0; i < s.mrgn; i++) {
-                                        *dest++ = ' ';
-                                }
-                        }
-
-                        buffer = save_ptr; /* Reset the buffer pointer */
-                        *dest++ = *buffer++;
-                        curr_width++;
-                } else {
-                        *dest++ = *buffer++;
-                        curr_width++;
-                }
-        }
 }
 
 /*
