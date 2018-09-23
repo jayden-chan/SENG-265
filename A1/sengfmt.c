@@ -150,10 +150,6 @@ void parse_space(char **input, char **dest, int *curr_width, const Settings s)
                 *(*dest)++ = '\n';
                 tmp_ptr++;
                 *curr_width = 0;
-
-                for (int i = 0; i < s.mrgn; i++) {
-                        *(*dest)++ = ' ';
-                }
         }
 
         *input = tmp_ptr;
