@@ -1,11 +1,13 @@
-.PHONY: build run
+CFLAGS = -Wall -ansi -std=c99
 
 default: build
 
 all: build run
 
 build:
-	gcc -Wall -ansi -std=c99 sengfmt.c -o sengfmt
+	gcc $(CFLAGS) sengfmt.c -o sengfmt
 
-run:
-	./sengfmt test/in06.txt
+clean:
+	rm ./sengfmt
+
+.PHONY: build run clean

@@ -24,6 +24,9 @@
  * guide, available here:
  *
  * https://www.kernel.org/doc/html/v4.10/process/coding-style.html
+ *
+ * It is pretty messy right now because we are not allowed to use malloc
+ * or header files.. Will improve a lot after the second C assignment.
  */
 
 #include <stdio.h>
@@ -31,6 +34,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 
 /* Benchmarking code */
 #ifndef WIN32
@@ -61,25 +65,14 @@ typedef struct Settings {
         bool fmt;
 } Settings;
 
-/**
- * settings_print prints all fields for the
- * Settings struct
- *
- * @param s The settings
- */
-static void settings_print(Settings s)
-{
-        printf("s->width = %d\n", s.width);
-        printf("s->mrgn = %d\n", s.mrgn);
-        printf("s->fmt = %d\n", s.fmt);
-}
-
 /* Function prototypes */
 static void fmt(char *input, char *output, Settings *s);
+static int space_diff(char *input);
 static void pre_parse(char *input, Settings *s);
 static bool load_file(const char *file_name, char buffer[]);
 static bool file_exists(const char *file_name);
 static void print_buffer(char *buffer);
+static int count_revifs(int n);
 
 static inline bool parse_bool(char *input);
 static inline int parse_int(char *input);
@@ -99,6 +92,7 @@ int main(int argc, char *argv[])
         }
 
         char input[MAX_BUF_LEN];
+        char output[MAX_BUF_LEN];
 
         if (!load_file(argv[1], input)) {
                 fprintf(stderr, "ERROR: File reading failed.\n");
@@ -107,9 +101,13 @@ int main(int argc, char *argv[])
 
         Settings s;
         print_buffer(input);
+
         pre_parse(input, &s);
-        print_buffer(input);
-        settings_print(s);
+
+        fmt(input, output, &s);
+
+        print_buffer(output);
+
         exit(0);
 }
 
@@ -126,14 +124,64 @@ static void fmt(char *input, char *output, Settings *s)
         int curr_width = 0;
         while (*input != '\0') {
                 if (s->fmt && isspace(*input)) {
+                        while (isspace(*input)) {
+                                input++;
+                        }
+                        input--;
+                        *input = ' ';
 
+                        if (curr_width + space_diff(input) + s->mrgn >= s->width) {
+                                *input = '\n';
+                                curr_width = 0;
+                        } else {
+                                curr_width++;
+                        }
+
+                        write(&output, &input);
                 } else if (*input == '?') {
+                        input++;
+                        char wrd[10];
+                        char *wrd_ptr = wrd;
 
+                        while (isalpha(*input)) {
+                                write(&wrd_ptr, &input);
+                        }
+                        *wrd_ptr = '\0';
+
+                        input++;
+                        if (!strcmp(wrd, "width")) {
+                                s->width = parse_int(input);
+                                s->fmt = true;
+                                input += count_revifs(s->width);
+                        } else if (s->fmt && !strcmp(wrd, "mrgn")) {
+                                s->mrgn = parse_int(input);
+                        }
+
+                        while (isspace(*input)) {
+                                input++;
+                        }
                 } else {
                         write(&output, &input);
                         curr_width++;
                 }
         }
+}
+
+/**
+ * space_diff calculates the number of characters
+ * until the next space in the input buffer
+ *
+ * @param input The input buffer
+ * @return      The number of chars
+ */
+static int space_diff(char *input)
+{
+        int ret = 0;
+        while (!isspace(*input++)) {
+                ret++;
+        }
+
+        return ret;
 }
 
 /**
@@ -214,7 +262,8 @@ static inline void write(char **dest, char **source)
 
 /**
  * load_file reads the specified file and loads the characters
- * into the supplied buffer array.
+ * into the supplied buffer array. This function is adapted from:
+ * https://stackoverflow.com/a/2029227/9980744
  *
  * @param file_name The path of the file to read
  * @param buffer    The buffer to load the file into
@@ -287,4 +336,19 @@ static void print_buffer(char *buffer)
         /* Add a newline at the end */
         printf("[0]\n");
         printf("--- END BUFFER DUMP ---\n");
+}
+
+static int count_revifs(int n)
+{
+    if (n < 0) n = (n == INT_MIN) ? INT_MAX : -n;
+    if (n > 999999999) return 10;
+    if (n > 99999999) return 9;
+    if (n > 9999999) return 8;
+    if (n > 999999) return 7;
+    if (n > 99999) return 6;
+    if (n > 9999) return 5;
+    if (n > 999) return 4;
+    if (n > 99) return 3;
+    if (n > 9) return 2;
+    return 1;
 }
