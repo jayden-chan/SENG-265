@@ -32,6 +32,20 @@
 #include <string.h>
 #include <ctype.h>
 
+#ifndef WIN32
+
+#include <sys/time.h>
+#include <sys/resource.h>
+
+double get_time()
+{
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    return t.tv_sec + t.tv_usec*1e-6;
+}
+
+#endif
+
 #define MAX_BUF_LEN 40000
 #define FLAG_SIZE_MRGN 6
 #define FLAG_SIZE_WIDTH 7
@@ -46,6 +60,12 @@ typedef struct Settings {
         bool fmt;
 } Settings;
 
+/**
+ * settings_print prints all fields for the
+ * Settings struct
+ *
+ * @param s The settings
+ */
 static void settings_print(Settings s)
 {
         printf("s->width = %d\n", s.width);
@@ -54,25 +74,15 @@ static void settings_print(Settings s)
 }
 
 /* Function prototypes */
+static void fmt(char *input, char *output, Settings *s);
 static void pre_parse(char *input, Settings *s);
-static int parse_int(char *input);
-static bool parse_bool(char *input);
 static bool load_file(const char *file_name, char buffer[]);
 static bool file_exists(const char *file_name);
 static void print_buffer(char *buffer);
 
-/**
- * write copies the character at the source pointer into
- * the location of the destination pointer, incrementing
- * both pointers after.
- *
- * @param dest   The destination location
- * @param source The source location
- */
-static inline void write(char **dest, char **source)
-{
-        *(*dest)++ = *(*source)++;
-}
+static inline bool parse_bool(char *input);
+static inline int parse_int(char *input);
+static inline void write(char **dest, char **source);
 
 /* Entry point for the program */
 int main(int argc, char *argv[])
@@ -103,6 +113,19 @@ int main(int argc, char *argv[])
 }
 
 /**
+ * fmt formats the provided input buffer and outputs
+ * the result in the output buffer
+ *
+ * @param input The input buffer
+ * @param ouput The output buffer
+ * @param s     The settings to use
+ */
+static void fmt(char *input, char *output, Settings *s)
+{
+
+}
+
+/**
  * pre_parse checks for the precence of the ?width
  * tag in the provided input buffer and sets the
  * provided settings accordingly.
@@ -130,7 +153,7 @@ static void pre_parse(char *input, Settings *s)
  * @param input The pointer
  * @return      The value of the integer
  */
-static int parse_int(char *input)
+static inline int parse_int(char *input)
 {
         char num[10];
         char *num_ptr = num;
@@ -151,7 +174,7 @@ static int parse_int(char *input)
  * @param input The pointer
  * @return      The value of the boolean
  */
-static bool parse_bool(char *input)
+static inline bool parse_bool(char *input)
 {
         char val[10];
         char *val_ptr = val;
@@ -163,6 +186,19 @@ static bool parse_bool(char *input)
         *val_ptr = '\0';
 
         return strcmp(val, "on") == 0;
+}
+
+/**
+ * write copies the character at the source pointer into
+ * the location of the destination pointer, incrementing
+ * both pointers after.
+ *
+ * @param dest   The destination location
+ * @param source The source location
+ */
+static inline void write(char **dest, char **source)
+{
+        *(*dest)++ = *(*source)++;
 }
 
 /**
@@ -228,15 +264,13 @@ static bool file_exists(const char *file_name)
 static void print_buffer(char *buffer)
 {
         printf("--- BEGIN BUFFER DUMP ---\n");
-        char *ptr = buffer;
 
         /* Advance the pointer through the buffer until it
          * reaches the null terminator, printing each character
          * as we go
          */
-        while (*ptr != '\0') {
-                printf("%c", *ptr);
-                ptr++;
+        while (*buffer != '\0') {
+                printf("%c", *buffer++);
         }
 
         /* Add a newline at the end */

@@ -5,7 +5,7 @@ default: build
 all: build run
 
 build:
-	gcc -Wall -ansi -std=c99 sengfmt.c -o main
+	gcc -Wall -ansi -std=c99 sengfmt.c -o sengfmt
 
 run:
-	./main test/in06.txt
+	./sengfmt test/in06.txt
