@@ -24,10 +24,6 @@
  * guide, available here:
  *
  * https://www.kernel.org/doc/html/v4.10/process/coding-style.html
- *
- * This code does some extra error handling in addition to the main assignment, so it
- * might be a little longer than most other submissions. The code should be much
- * easier to adapt for the second part of the assignment though.
  */
 
 #include <stdio.h>
@@ -37,6 +33,8 @@
 #include <ctype.h>
 
 #define MAX_BUF_LEN 40000
+#define FLAG_SIZE_MRGN 6
+#define FLAG_SIZE_WIDTH 7
 
 /*
  * The Settings struct stores the formatting flags
@@ -48,10 +46,34 @@ typedef struct Settings {
         bool fmt;
 } Settings;
 
+static void settings_print(Settings s)
+{
+        printf("s->width = %d\n", s.width);
+        printf("s->mrgn = %d\n", s.mrgn);
+        printf("s->fmt = %d\n", s.fmt);
+}
+
 /* Function prototypes */
-bool load_file(const char *file_name, char buffer[]);
-bool file_exists(const char *file_name);
-void print_buffer(char *buffer);
+static int parse_flag_int(char *input);
+static void pre_parse(char *input, Settings *s);
+static bool load_file(const char *file_name, char buffer[]);
+static bool file_exists(const char *file_name);
+static void print_buffer(char *buffer);
+
+/* Inlines */
+
+/*
+ * write copies the character at the source pointer into
+ * the location of the destination pointer, incrementing
+ * both pointers after.
+ *
+ * @param dest   The destination location
+ * @param source The source location
+ */
+static inline void write(char **dest, char **source)
+{
+        *(*dest)++ = *(*source)++;
+}
 
 int main(int argc, char *argv[])
 {
@@ -66,15 +88,62 @@ int main(int argc, char *argv[])
         }
 
         char input[MAX_BUF_LEN];
-        bool success = load_file(argv[1], input);
-        if (!success) {
+
+        if (!load_file(argv[1], input)) {
                 fprintf(stderr, "ERROR: File reading failed.\n");
                 exit(1);
         }
 
+        Settings s;
+
         print_buffer(input);
+        pre_parse(input, &s);
+        print_buffer(input);
+        settings_print(s);
 
         exit(0);
+}
+
+/*
+ * pre_parse checks for the precence of the ?width
+ * tag in the provided input buffer and sets the
+ * provided settings accordingly.
+ *
+ * @param input The input buffer
+ * @param s     The settings
+ */
+static void pre_parse(char *input, Settings *s)
+{
+        char *width_loc = strstr(input, "?width ");
+        if (width_loc == NULL) {
+                s->width = (size_t) NULL;
+                s->mrgn = 0;
+                s->fmt = false;
+        } else {
+                char *mrgn_loc = strstr(input, "?mrgn ");
+                if (mrgn_loc == NULL) {
+                        s->mrgn = 0;
+                } else {
+                        s->mrgn = parse_flag_int(mrgn_loc + FLAG_SIZE_MRGN);
+                }
+
+                s->fmt = true;
+                s->width = parse_flag_int(width_loc + FLAG_SIZE_WIDTH);
+        }
+}
+
+static int parse_flag_int(char *input)
+{
+        char num[10];
+        char *num_ptr = num;
+        char *inp_ptr = input;
+
+        while (isdigit(*inp_ptr)) {
+                *num_ptr++ = *inp_ptr++;
+        }
+        *num_ptr = '\0';
+
+        return atoi(num);
 }
 
 /*
@@ -85,7 +154,7 @@ int main(int argc, char *argv[])
  * @param buffer    The buffer to load the file into
  * @return          True if the file was read successfully, false otherwise
  */
-bool load_file(const char *file_name, char *buffer)
+static bool load_file(const char *file_name, char *buffer)
 {
         /* Load the file */
         FILE *fp = fopen(file_name, "r");
@@ -116,7 +185,7 @@ bool load_file(const char *file_name, char *buffer)
  * @param file_name The path to the file
  * @return True if the file exists, false if it does not
  */
-bool file_exists(const char *file_name)
+static bool file_exists(const char *file_name)
 {
         /* Try opening the file */
         FILE* file = fopen(file_name, "r");
@@ -137,7 +206,7 @@ bool file_exists(const char *file_name)
  *
  * @param buffer The buffer to print
  */
-void print_buffer(char *buffer)
+static void print_buffer(char *buffer)
 {
         printf("--- BEGIN BUFFER DUMP ---\n");
         char *ptr = buffer;
