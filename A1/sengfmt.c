@@ -36,7 +36,7 @@
 #define FLAG_SIZE_MRGN 6
 #define FLAG_SIZE_WIDTH 7
 
-/*
+/**
  * The Settings struct stores the formatting flags
  * found in the supplied text file.
  */
@@ -54,15 +54,14 @@ static void settings_print(Settings s)
 }
 
 /* Function prototypes */
-static int parse_flag_int(char *input);
 static void pre_parse(char *input, Settings *s);
+static int parse_int(char *input);
+static bool parse_bool(char *input);
 static bool load_file(const char *file_name, char buffer[]);
 static bool file_exists(const char *file_name);
 static void print_buffer(char *buffer);
 
-/* Inlines */
-
-/*
+/**
  * write copies the character at the source pointer into
  * the location of the destination pointer, incrementing
  * both pointers after.
@@ -75,15 +74,16 @@ static inline void write(char **dest, char **source)
         *(*dest)++ = *(*source)++;
 }
 
+/* Entry point for the program */
 int main(int argc, char *argv[])
 {
         if (argc < 2) {
-                fprintf(stderr, "ERROR: Not enough arguments. You must specify a file.\n");
+                fprintf(stderr, "Not enough arguments. You must specify a file.\n");
                 exit(1);
         }
 
         if (!file_exists(argv[1])) {
-                fprintf(stderr, "ERROR: Specified file does not exist.\n");
+                fprintf(stderr, "Specified file does not exist.\n");
                 exit(1);
         }
 
@@ -95,16 +95,14 @@ int main(int argc, char *argv[])
         }
 
         Settings s;
-
         print_buffer(input);
         pre_parse(input, &s);
         print_buffer(input);
         settings_print(s);
-
         exit(0);
 }
 
-/*
+/**
  * pre_parse checks for the precence of the ?width
  * tag in the provided input buffer and sets the
  * provided settings accordingly.
@@ -120,19 +118,19 @@ static void pre_parse(char *input, Settings *s)
                 s->mrgn = 0;
                 s->fmt = false;
         } else {
-                char *mrgn_loc = strstr(input, "?mrgn ");
-                if (mrgn_loc == NULL) {
-                        s->mrgn = 0;
-                } else {
-                        s->mrgn = parse_flag_int(mrgn_loc + FLAG_SIZE_MRGN);
-                }
-
+                s->width = parse_int(width_loc + FLAG_SIZE_WIDTH);
                 s->fmt = true;
-                s->width = parse_flag_int(width_loc + FLAG_SIZE_WIDTH);
         }
 }
 
-static int parse_flag_int(char *input)
+/**
+ * parse_int takes a pointer to an integer in a string
+ * and returns its value
+ *
+ * @param input The pointer
+ * @return      The value of the integer
+ */
+static int parse_int(char *input)
 {
         char num[10];
         char *num_ptr = num;
@@ -146,7 +144,28 @@ static int parse_flag_int(char *input)
         return atoi(num);
 }
 
-/*
+/**
+ * parse_bool takes a pointer to a word in a string
+ * and returns its value
+ *
+ * @param input The pointer
+ * @return      The value of the boolean
+ */
+static bool parse_bool(char *input)
+{
+        char val[10];
+        char *val_ptr = val;
+        char *inp_ptr = input;
+
+        while (isalpha(*inp_ptr)) {
+                *val_ptr++ = *inp_ptr++;
+        }
+        *val_ptr = '\0';
+
+        return strcmp(val, "on") == 0;
+}
+
+/**
  * load_file reads the specified file and loads the characters
  * into the supplied buffer array.
  *
@@ -179,7 +198,7 @@ static bool load_file(const char *file_name, char *buffer)
         return false;
 }
 
-/*
+/**
  * file_exists checks to see whether the specified file exists
  *
  * @param file_name The path to the file
@@ -200,7 +219,7 @@ static bool file_exists(const char *file_name)
         return false;
 }
 
-/*
+/**
  * print_buffer prints the contents of the supplied buffer
  * into stdout. Currently only used for debugging.
  *
