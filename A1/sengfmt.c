@@ -36,21 +36,6 @@
 #include <ctype.h>
 #include <limits.h>
 
-/* Benchmarking code */
-#ifndef WIN32
-
-#include <sys/time.h>
-#include <sys/resource.h>
-
-static double get_time()
-{
-    struct timeval t;
-    gettimeofday(&t, NULL);
-    return t.tv_sec + t.tv_usec*1e-6;
-}
-
-#endif
-
 #define MAX_BUF_LEN 40000
 #define FLAG_SIZE_MRGN 6
 #define FLAG_SIZE_WIDTH 7
@@ -69,10 +54,11 @@ typedef struct Settings {
 static void fmt(char *input, char *output, Settings *s);
 static int space_diff(char *input);
 static void pre_parse(char *input, Settings *s);
+static void trim(char *input);
 static bool load_file(const char *file_name, char buffer[]);
 static bool file_exists(const char *file_name);
 static void print_buffer(char *buffer);
-static int count_revifs(int n);
+static int count_digits(int n);
 
 static inline bool parse_bool(char *input);
 static inline int parse_int(char *input);
@@ -106,6 +92,7 @@ int main(int argc, char *argv[])
 
         fmt(input, output, &s);
 
+        trim(output);
         print_buffer(output);
 
         exit(0);
@@ -152,9 +139,11 @@ static void fmt(char *input, char *output, Settings *s)
                         if (!strcmp(wrd, "width")) {
                                 s->width = parse_int(input);
                                 s->fmt = true;
-                                input += count_revifs(s->width);
+                                input += count_digits(s->width);
                         } else if (s->fmt && !strcmp(wrd, "mrgn")) {
                                 s->mrgn = parse_int(input);
+                        } else if (!strcmp(wrd, "fmt")) {
+                                s->fmt = parse_bool(input);
                         }
 
                         while (isspace(*input)) {
@@ -248,6 +237,26 @@ static inline bool parse_bool(char *input)
 }
 
 /**
+ * trim removes the trailing whitespace from
+ * a given input buffer
+ *
+ * @param buffer The buffer to trim
+ */
+static void trim(char *input)
+{
+        while (*input != '\0') {
+                input++;
+        }
+        input--;
+
+        while (isspace(*input)) {
+                input--;
+        }
+        input++;
+        *input = '\0';
+}
+
+/**
  * write copies the character at the source pointer into
  * the location of the destination pointer, incrementing
  * both pointers after.
@@ -338,7 +347,14 @@ static void print_buffer(char *buffer)
         printf("--- END BUFFER DUMP ---\n");
 }
 
-static int count_revifs(int n)
+/**
+ * count_digits counts the number of digits
+ * in an integer
+ *
+ * @param n The number
+ * @return  The number of digits in n
+ */
+static int count_digits(int n)
 {
     if (n < 0) n = (n == INT_MIN) ? INT_MAX : -n;
     if (n > 999999999) return 10;
