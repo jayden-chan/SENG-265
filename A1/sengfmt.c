@@ -32,12 +32,13 @@
 #include <string.h>
 #include <ctype.h>
 
+/* Benchmarking code */
 #ifndef WIN32
 
 #include <sys/time.h>
 #include <sys/resource.h>
 
-double get_time()
+static double get_time()
 {
     struct timeval t;
     gettimeofday(&t, NULL);
@@ -116,17 +117,27 @@ int main(int argc, char *argv[])
  * fmt formats the provided input buffer and outputs
  * the result in the output buffer
  *
- * @param input The input buffer
- * @param ouput The output buffer
- * @param s     The settings to use
+ * @param input  The input buffer
+ * @param output The output buffer
+ * @param s      The settings to use
  */
 static void fmt(char *input, char *output, Settings *s)
 {
+        int curr_width = 0;
+        while (*input != '\0') {
+                if (s->fmt && isspace(*input)) {
 
+                } else if (*input == '?') {
+
+                } else {
+                        write(&output, &input);
+                        curr_width++;
+                }
+        }
 }
 
 /**
- * pre_parse checks for the precence of the ?width
+ * pre_parse checks for the presence of the ?width
  * tag in the provided input buffer and sets the
  * provided settings accordingly.
  *
