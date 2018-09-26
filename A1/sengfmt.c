@@ -1,7 +1,7 @@
 /*
  * @author Jayden Chan <jaydencn7@gmail.com>
  * @date October 7, 2018
- * @version 1
+ * @version 1.7.6
  *
  * UVic SENG 265, Fall 2018, A1
  *
@@ -12,11 +12,11 @@
  * to the command line screen by default (hint: using printf() method).
  *
  * Supported commands include:
- * ?width width :  Each line following the command will be formatted such
- *                 that there is never more than width characters in each line
- * ?mrgn left   :  Each line following the command will be indented left spaces
- *                 from the left-hand margin.
- * ?fmt on/off  :  This is used to turn formatting on and off.
+ * ?width width:  Each line following the command will be formatted such
+ *                that there is never more than width characters in each line
+ * ?mrgn left  :  Each line following the command will be indented left spaces
+ *                from the left-hand margin.
+ * ?fmt on/off :  This is used to turn formatting on and off.
  */
 
 /*
@@ -34,7 +34,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
-#include <limits.h>
 
 #define MAX_BUF_LEN 40000
 #define MAX_LINE_LEN 132
@@ -118,7 +117,6 @@ static void fmt(const char *file_name, char *output, Settings *s)
                 if (s->fmt) {
                         char *word = strtok(line, " ");
 
-                        /* write_spaces(&output, s->mrgn); */
                         while (word != NULL) {
                                 trim(word);
 
@@ -145,10 +143,9 @@ static void fmt(const char *file_name, char *output, Settings *s)
                 } else {
                         char *ln_ptr = line;
 
-                        while (*ln_ptr != '\n') {
+                        while (*ln_ptr != '\0') {
                                 write(&output, &ln_ptr);
                         }
-                        write_char(&output, '\n');
                 }
         }
 
@@ -160,7 +157,11 @@ static void fmt(const char *file_name, char *output, Settings *s)
  * handle_qm takes in a word beginning with a
  * question mark and parses it. If it is a flag,
  * the appropriate action will be taken.
- * Otherwise nothing will happen
+ * Otherwise nothing will happen.
+ *
+ * WARNING: This function will not work if there
+ * isn't already something tokenized by strtoken
+ * (strtoken is being passed NULL)
  *
  * @param word The word to parse
  * @param s    The settings to modify
@@ -230,7 +231,7 @@ static inline void write(char **dest, char **source)
 static inline void write_spaces(char **output, int spaces)
 {
         for (int i = 0; i < spaces; i++) {
-                *(*output)++ = ' ';
+                write_char(output, ' ');
         }
 }
 
@@ -292,7 +293,9 @@ static void print_buffer(char *buffer, const bool debug)
         if (debug) {
                 printf("[0]");
         }
+
         printf("\n");
+
         if (debug) {
                 printf("--- END BUFFER DUMP ---\n");
         }
