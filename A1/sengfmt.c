@@ -37,8 +37,7 @@
 #include <limits.h>
 
 #define MAX_BUF_LEN 40000
-#define FLAG_SIZE_MRGN 6
-#define FLAG_SIZE_WIDTH 7
+#define MAX_LINE_LEN 132
 
 /**
  * The Settings struct stores the formatting flags
@@ -51,50 +50,37 @@ typedef struct Settings {
 } Settings;
 
 /* Function prototypes */
-static void fmt(char *input, char *output, Settings *s);
-static int space_diff(char *input);
-static void pre_parse(char *input, Settings *s);
+static void fmt(const char *file_name, char *output, Settings *s);
+static void handle_qm(char *word, Settings *s);
 static void trim(char *input);
-static bool load_file(const char *file_name, char *buffer);
 static bool file_exists(const char *file_name);
-static void print_buffer(char *buffer, bool debug);
-static int count_digits(int n);
+static void print_buffer(char *buffer, const bool debug);
 
-static inline bool parse_bool(char *input);
-static inline int parse_int(char *input);
+/* Inlines */
 static inline void write(char **dest, char **source);
+static inline void write_spaces(char **output, int spaces);
+static inline void write_char(char **output, const char ch);
 
 /* Entry point for the program */
 int main(int argc, char *argv[])
 {
         if (argc < 2) {
                 fprintf(stderr, "Not enough arguments. You must specify a file.\n");
-                exit(1);
+                return EXIT_FAILURE;
         }
 
         if (!file_exists(argv[1])) {
                 fprintf(stderr, "Specified file does not exist.\n");
-                exit(1);
-        }
-
-        char input[MAX_BUF_LEN];
-        char output[MAX_BUF_LEN];
-
-        if (!load_file(argv[1], input)) {
-                fprintf(stderr, "ERROR: File reading failed.\n");
-                exit(1);
+                return EXIT_FAILURE;
         }
 
         Settings s;
+        char output[MAX_BUF_LEN];
 
-        pre_parse(input, &s);
-
-        fmt(input, output, &s);
-
-        trim(output);
+        fmt(argv[1], output, &s);
         print_buffer(output, false);
 
-        exit(0);
+        return EXIT_SUCCESS;
 }
 
 /**
@@ -105,163 +91,100 @@ int main(int argc, char *argv[])
  * @param output The output buffer
  * @param s      The settings to use
  */
-static void fmt(char *input, char *output, Settings *s)
+static void fmt(const char *file_name, char *output, Settings *s)
 {
+        FILE* file = fopen(file_name, "r");
+        char line[MAX_LINE_LEN+1];
         int curr_width = 0;
-        while (*input != '\0') {
-                if (s->fmt && *input == '\n' && *(input + 1) == '\n') {
-                        write(&output, &input);
-                        write(&output, &input);
 
-                        for (int i = 0; i < s->mrgn; i++) {
-                                *output++ = ' ';
-                        }
+        while (fgets(line, MAX_LINE_LEN, file) != NULL) {
+                if (line[0] == '?') {
+                        char buffer[MAX_LINE_LEN];
+                        strncpy(buffer, line, sizeof(buffer));
 
+                        char *word = strtok(buffer, " ");
+                        handle_qm(word, s);
+                        continue;
+                }
+
+                if (line[0] == '\n') {
+                        output--;
+                        write_char(&output, '\n');
+                        write_char(&output, '\n');
                         curr_width = 0;
-                } else if (s->fmt && isspace(*input)) {
-                        while (isspace(*input)) {
-                                input++;
-                        }
-                        input--;
-                        *input = ' ';
+                        continue;
+                }
 
-                        if (curr_width + space_diff(input) + s->mrgn >= s->width) {
-                                input++;
-                                *output++ = '\n';
-                                curr_width = 0;
+                if (s->fmt) {
+                        char *word = strtok(line, " ");
 
-                                for (int i = 0; i < s->mrgn; i++) {
-                                        *output++ = ' ';
+                        /* write_spaces(&output, s->mrgn); */
+                        while (word != NULL) {
+                                trim(word);
+
+                                if (curr_width + s->mrgn + strlen(word) > s->width) {
+                                        output--;
+                                        write_char(&output, '\n');
+                                        curr_width = 0;
                                 }
-                        }
-                        curr_width++;
-                        write(&output, &input);
-                } else if (*input == '?') {
-                        char wrd[10];
-                        char *save_ptr = input++;
-                        char *wrd_ptr = wrd;
-                        bool r_space = false;
 
-                        while (isalpha(*input)) {
-                                write(&wrd_ptr, &input);
-                        }
-                        *wrd_ptr = '\0';
-                        input++;
-
-                        if (!strcmp(wrd, "width")) {
-                                s->width = parse_int(input);
-                                s->fmt = true;
-                                input += count_digits(s->width);
-                                r_space = true;
-                        } else if (s->fmt && !strcmp(wrd, "mrgn")) {
-                                s->mrgn = parse_int(input);
-                                input += count_digits(s->mrgn);
-
-                                for (int i = 0; i < s->mrgn; i++) {
-                                        *output++ = ' ';
+                                if (curr_width == 0) {
+                                        write_spaces(&output, s->mrgn);
                                 }
-                                r_space = true;
-                        } else if (!strcmp(wrd, "fmt")) {
-                                s->fmt = parse_bool(input);
-                                input += strlen(wrd);
-                                r_space = true;
-                        } else {
-                                input = save_ptr;
-                                write(&output, &input);
-                                curr_width++;
-                        }
 
-                        if (r_space) {
-                                while (isspace(*input)) {
-                                        input++;
+                                char *wrd_ptr = word;
+                                for (int i = 0; i < strlen(word); i++) {
+                                        write(&output, &wrd_ptr);
                                 }
+
+                                write_char(&output, ' ');
+                                curr_width += strlen(word) + 1;
+
+                                word = strtok(NULL, " ");
                         }
                 } else {
-                        write(&output, &input);
-                        curr_width++;
+                        char *ln_ptr = line;
+
+                        while (*ln_ptr != '\n') {
+                                write(&output, &ln_ptr);
+                        }
+                        write_char(&output, '\n');
                 }
         }
+
+        trim(output);
+        fclose(file);
 }
 
 /**
- * space_diff calculates the number of characters
- * until the next space in the input buffer
+ * handle_qm takes in a word beginning with a
+ * question mark and parses it. If it is a flag,
+ * the appropriate action will be taken.
+ * Otherwise nothing will happen
  *
- * @param input The input buffer
- * @return      The number of chars
+ * @param word The word to parse
+ * @param s    The settings to modify
  */
-static int space_diff(char *input)
+static void handle_qm(char *word, Settings *s)
 {
-        int ret = 0;
-        input++;
-        while (!isspace(*input++)) {
-                ret++;
-        }
+        trim(word);
 
-        return ret;
-}
-
-/**
- * pre_parse checks for the presence of the ?width
- * tag in the provided input buffer and sets the
- * provided settings accordingly.
- *
- * @param input The input buffer
- * @param s     The settings
- */
-static void pre_parse(char *input, Settings *s)
-{
-        char *width_loc = strstr(input, "?width ");
-        if (width_loc == NULL) {
-                s->width = (size_t) NULL;
-                s->mrgn = 0;
-                s->fmt = false;
-        } else {
-                s->width = parse_int(width_loc + FLAG_SIZE_WIDTH);
+        if (!strcmp(word, "?width")) {
+                word = strtok(NULL, " ");
+                s->width = atoi(word);
                 s->fmt = true;
+                s->mrgn = 0;
+                word = strtok(NULL, " ");
+        } else if (s->fmt && !strcmp(word, "?mrgn")) {
+                word = strtok(NULL, " ");
+                s->mrgn = atoi(word);
+                word = strtok(NULL, " ");
+        } else if (!strcmp(word, "?fmt")) {
+                word = strtok(NULL, " ");
+                trim(word);
+                s->fmt = strcmp(word, "off");
+                word = strtok(NULL, " ");
         }
-}
-
-/**
- * parse_int takes a pointer to an integer in a string
- * and returns its value
- *
- * @param input The pointer
- * @return      The value of the integer
- */
-static inline int parse_int(char *input)
-{
-        char num[10];
-        char *num_ptr = num;
-        char *inp_ptr = input;
-
-        while (isdigit(*inp_ptr)) {
-                *num_ptr++ = *inp_ptr++;
-        }
-        *num_ptr = '\0';
-
-        return atoi(num);
-}
-
-/**
- * parse_bool takes a pointer to a word in a string
- * and returns its value
- *
- * @param input The pointer
- * @return      The value of the boolean
- */
-static inline bool parse_bool(char *input)
-{
-        char val[10];
-        char *val_ptr = val;
-        char *inp_ptr = input;
-
-        while (isalpha(*inp_ptr)) {
-                *val_ptr++ = *inp_ptr++;
-        }
-        *val_ptr = '\0';
-
-        return strcmp(val, "on") == 0;
 }
 
 /**
@@ -298,37 +221,30 @@ static inline void write(char **dest, char **source)
 }
 
 /**
- * load_file reads the specified file and loads the characters
- * into the supplied buffer array. This function is adapted from:
- * https://stackoverflow.com/a/2029227/9980744
+ * write_spaces writes the specified number of
+ * spaces into the provided output buffer
  *
- * @param file_name The path of the file to read
- * @param buffer    The buffer to load the file into
- * @return          True if the file was read successfully, false otherwise
+ * @param output The output buffer
+ * @param spaces The number of spaces
  */
-static bool load_file(const char *file_name, char *buffer)
+static inline void write_spaces(char **output, int spaces)
 {
-        /* Load the file */
-        FILE *fp = fopen(file_name, "r");
-
-        /* If the file isn't NULL, open */
-        if (fp != NULL) {
-                size_t newLen = fread(buffer, sizeof(char), MAX_BUF_LEN, fp);
-
-                /* If there is an error, close and return false */
-                if (ferror(fp) != 0) {
-                        fclose(fp);
-                        return false;
-                } else {
-                        buffer[newLen++] = '\0'; /* Terminate string */
-                }
-
-                fclose(fp);
-                return true;
+        for (int i = 0; i < spaces; i++) {
+                *(*output)++ = ' ';
         }
+}
 
-        /* If file is NULL return false, indicating failure */
-        return false;
+/**
+ * write_char writes the provided character
+ * into the provided output buffer and increments
+ * the output pointer by one
+ *
+ * @param output The output buffer
+ * @param ch     The character to write
+ */
+static inline void write_char(char **output, const char ch)
+{
+        *(*output)++ = ch;
 }
 
 /**
@@ -354,11 +270,11 @@ static bool file_exists(const char *file_name)
 
 /**
  * print_buffer prints the contents of the supplied buffer
- * into stdout. Currently only used for debugging.
+ * into stdout.
  *
  * @param buffer The buffer to print
  */
-static void print_buffer(char *buffer, bool debug)
+static void print_buffer(char *buffer, const bool debug)
 {
         if (debug) {
                 printf("--- BEGIN BUFFER DUMP ---\n");
@@ -373,30 +289,11 @@ static void print_buffer(char *buffer, bool debug)
         }
 
         /* Add a newline at the end */
+        if (debug) {
+                printf("[0]");
+        }
         printf("\n");
         if (debug) {
                 printf("--- END BUFFER DUMP ---\n");
         }
-}
-
-/**
- * count_digits counts the number of digits
- * in an integer
- *
- * @param n The number
- * @return  The number of digits in n
- */
-static int count_digits(int n)
-{
-        if (n < 0) n = (n == INT_MIN) ? INT_MAX : -n;
-        if (n > 999999999) return 10;
-        if (n > 99999999) return 9;
-        if (n > 9999999) return 8;
-        if (n > 999999) return 7;
-        if (n > 99999) return 6;
-        if (n > 9999) return 5;
-        if (n > 999) return 4;
-        if (n > 99) return 3;
-        if (n > 9) return 2;
-        return 1;
 }
