@@ -55,9 +55,9 @@ static void fmt(char *input, char *output, Settings *s);
 static int space_diff(char *input);
 static void pre_parse(char *input, Settings *s);
 static void trim(char *input);
-static bool load_file(const char *file_name, char buffer[]);
+static bool load_file(const char *file_name, char *buffer);
 static bool file_exists(const char *file_name);
-static void print_buffer(char *buffer);
+static void print_buffer(char *buffer, bool debug);
 static int count_digits(int n);
 
 static inline bool parse_bool(char *input);
@@ -86,14 +86,13 @@ int main(int argc, char *argv[])
         }
 
         Settings s;
-        print_buffer(input);
 
         pre_parse(input, &s);
 
         fmt(input, output, &s);
 
         trim(output);
-        print_buffer(output);
+        print_buffer(output, false);
 
         exit(0);
 }
@@ -110,7 +109,16 @@ static void fmt(char *input, char *output, Settings *s)
 {
         int curr_width = 0;
         while (*input != '\0') {
-                if (s->fmt && isspace(*input)) {
+                if (s->fmt && *input == '\n' && *(input + 1) == '\n') {
+                        write(&output, &input);
+                        write(&output, &input);
+
+                        for (int i = 0; i < s->mrgn; i++) {
+                                *output++ = ' ';
+                        }
+
+                        curr_width = 0;
+                } else if (s->fmt && isspace(*input)) {
                         while (isspace(*input)) {
                                 input++;
                         }
@@ -118,36 +126,55 @@ static void fmt(char *input, char *output, Settings *s)
                         *input = ' ';
 
                         if (curr_width + space_diff(input) + s->mrgn >= s->width) {
-                                *input = '\n';
+                                input++;
+                                *output++ = '\n';
                                 curr_width = 0;
-                        } else {
-                                curr_width++;
-                        }
 
+                                for (int i = 0; i < s->mrgn; i++) {
+                                        *output++ = ' ';
+                                }
+                        }
+                        curr_width++;
                         write(&output, &input);
                 } else if (*input == '?') {
-                        input++;
                         char wrd[10];
+                        char *save_ptr = input++;
                         char *wrd_ptr = wrd;
+                        bool r_space = false;
 
                         while (isalpha(*input)) {
                                 write(&wrd_ptr, &input);
                         }
                         *wrd_ptr = '\0';
-
                         input++;
+
                         if (!strcmp(wrd, "width")) {
                                 s->width = parse_int(input);
                                 s->fmt = true;
                                 input += count_digits(s->width);
+                                r_space = true;
                         } else if (s->fmt && !strcmp(wrd, "mrgn")) {
                                 s->mrgn = parse_int(input);
+                                input += count_digits(s->mrgn);
+
+                                for (int i = 0; i < s->mrgn; i++) {
+                                        *output++ = ' ';
+                                }
+                                r_space = true;
                         } else if (!strcmp(wrd, "fmt")) {
                                 s->fmt = parse_bool(input);
+                                input += strlen(wrd);
+                                r_space = true;
+                        } else {
+                                input = save_ptr;
+                                write(&output, &input);
+                                curr_width++;
                         }
 
-                        while (isspace(*input)) {
-                                input++;
+                        if (r_space) {
+                                while (isspace(*input)) {
+                                        input++;
+                                }
                         }
                 } else {
                         write(&output, &input);
@@ -166,6 +193,7 @@ static void fmt(char *input, char *output, Settings *s)
 static int space_diff(char *input)
 {
         int ret = 0;
+        input++;
         while (!isspace(*input++)) {
                 ret++;
         }
@@ -330,9 +358,11 @@ static bool file_exists(const char *file_name)
  *
  * @param buffer The buffer to print
  */
-static void print_buffer(char *buffer)
+static void print_buffer(char *buffer, bool debug)
 {
-        printf("--- BEGIN BUFFER DUMP ---\n");
+        if (debug) {
+                printf("--- BEGIN BUFFER DUMP ---\n");
+        }
 
         /* Advance the pointer through the buffer until it
          * reaches the null terminator, printing each character
@@ -343,8 +373,10 @@ static void print_buffer(char *buffer)
         }
 
         /* Add a newline at the end */
-        printf("[0]\n");
-        printf("--- END BUFFER DUMP ---\n");
+        printf("\n");
+        if (debug) {
+                printf("--- END BUFFER DUMP ---\n");
+        }
 }
 
 /**
@@ -356,15 +388,15 @@ static void print_buffer(char *buffer)
  */
 static int count_digits(int n)
 {
-    if (n < 0) n = (n == INT_MIN) ? INT_MAX : -n;
-    if (n > 999999999) return 10;
-    if (n > 99999999) return 9;
-    if (n > 9999999) return 8;
-    if (n > 999999) return 7;
-    if (n > 99999) return 6;
-    if (n > 9999) return 5;
-    if (n > 999) return 4;
-    if (n > 99) return 3;
-    if (n > 9) return 2;
-    return 1;
+        if (n < 0) n = (n == INT_MIN) ? INT_MAX : -n;
+        if (n > 999999999) return 10;
+        if (n > 99999999) return 9;
+        if (n > 9999999) return 8;
+        if (n > 999999) return 7;
+        if (n > 99999) return 6;
+        if (n > 9999) return 5;
+        if (n > 999) return 4;
+        if (n > 99) return 3;
+        if (n > 9) return 2;
+        return 1;
 }
