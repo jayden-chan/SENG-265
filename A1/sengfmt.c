@@ -86,9 +86,9 @@ int main(int argc, char *argv[])
  * fmt formats the provided input buffer and outputs
  * the result in the output buffer
  *
- * @param input  The input buffer
- * @param output The output buffer
- * @param s      The settings to use
+ * @param file_name The file to format
+ * @param output    The output buffer
+ * @param s         The settings to use
  */
 static void fmt(const char *file_name, char *output, Settings *s)
 {
@@ -192,7 +192,7 @@ static void handle_qm(char *word, Settings *s)
  * trim removes the trailing whitespace from
  * a given input buffer
  *
- * @param buffer The buffer to trim
+ * @param input The buffer to trim
  */
 static void trim(char *input)
 {
@@ -274,6 +274,7 @@ static bool file_exists(const char *file_name)
  * into stdout.
  *
  * @param buffer The buffer to print
+ * @param debug  Whether or not to print debug info
  */
 static void print_buffer(char *buffer, const bool debug)
 {
