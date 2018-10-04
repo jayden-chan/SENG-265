@@ -35,7 +35,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_BUF_LEN 40000
+#define MAX_BUF_LEN 39601
 #define MAX_LINE_LEN 132
 
 /**
