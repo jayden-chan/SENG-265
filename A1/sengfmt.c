@@ -35,7 +35,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_BUF_LEN 39601
+#define MAX_BUF_LEN 39600
 #define MAX_LINE_LEN 132
 
 /**
@@ -53,7 +53,7 @@ static void fmt(const char *file_name, char *output, Settings *s);
 static void handle_qm(char *word, Settings *s);
 static void trim(char *input);
 static bool file_exists(const char *file_name);
-static void print_buffer(char *buffer, const bool debug);
+static void print_buffer(char *buffer);
 
 static inline void write(char **dest, char **source);
 static inline void write_spaces(char **output, int spaces);
@@ -73,10 +73,10 @@ int main(int argc, char *argv[])
         }
 
         Settings s;
-        char output[MAX_BUF_LEN];
+        char output[MAX_BUF_LEN+1];
 
         fmt(argv[1], output, &s);
-        print_buffer(output, false);
+        print_buffer(output);
 
         return EXIT_SUCCESS;
 }
@@ -270,10 +270,11 @@ static bool file_exists(const char *file_name)
  * @param buffer The buffer to print
  * @param debug  Whether or not to print debug info
  */
-static void print_buffer(char *buffer, const bool debug)
+static void print_buffer(char *buffer)
 {
-        if (debug)
+#ifdef DEBUG
                 printf("--- BEGIN BUFFER DUMP ---\n");
+#endif
 
         /* Advance the pointer through the buffer until it
          * reaches the null terminator, printing each character
@@ -283,11 +284,12 @@ static void print_buffer(char *buffer, const bool debug)
                 printf("%c", *buffer++);
 
         /* Add a newline at the end */
-        if (debug)
+#ifdef DEBUG
                 printf("[0]");
-
+#endif
         printf("\n");
 
-        if (debug)
+#ifdef DEBUG
                 printf("--- END BUFFER DUMP ---\n");
+#endif
 }
