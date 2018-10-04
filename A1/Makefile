@@ -1,4 +1,5 @@
-CFLAGS = -Wall -ansi -std=c99
+CFLAGS = -Wall -std=c99
+PEDANTIC = -Wextra -Wpedantic -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion
 
 default: build
 
@@ -8,7 +9,7 @@ build:
 	gcc $(CFLAGS) sengfmt.c -o sengfmt
 
 pedantic:
-	gcc $(CFLAGS) -Wextra sengfmt.c -o sengfmt
+	gcc $(CFLAGS) $(PEDANTIC) sengfmt.c -o sengfmt
 
 debug:
 	gcc $(CFLAGS) -g sengfmt.c -o sengfmt

@@ -55,7 +55,6 @@ static void trim(char *input);
 static bool file_exists(const char *file_name);
 static void print_buffer(char *buffer, const bool debug);
 
-/* Inlines */
 static inline void write(char **dest, char **source);
 static inline void write_spaces(char **output, int spaces);
 static inline void write_char(char **output, const char ch);
@@ -120,7 +119,7 @@ static void fmt(const char *file_name, char *output, Settings *s)
                         while (word != NULL) {
                                 trim(word);
 
-                                if (curr_width + s->mrgn + strlen(word) > (size_t) s->width) {
+                                if (curr_width + s->mrgn + (int) strlen(word) > s->width) {
                                         output--;
                                         write_char(&output, '\n');
                                         curr_width = 0;
@@ -131,12 +130,12 @@ static void fmt(const char *file_name, char *output, Settings *s)
                                 }
 
                                 char *wrd_ptr = word;
-                                for (int i = 0; (size_t) i < strlen(word); i++) {
+                                for (int i = 0; i < (int) strlen(word); i++) {
                                         write(&output, &wrd_ptr);
                                 }
 
                                 write_char(&output, ' ');
-                                curr_width += strlen(word) + 1;
+                                curr_width += (int) strlen(word) + 1;
 
                                 word = strtok(NULL, " ");
                         }
