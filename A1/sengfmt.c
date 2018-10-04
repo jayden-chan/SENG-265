@@ -97,7 +97,7 @@ static void fmt(const char *file_name, char *output, Settings *s)
 
         while (fgets(line, MAX_LINE_LEN, file) != NULL) {
                 if (line[0] == '?') {
-                        char buffer[MAX_LINE_LEN];
+                        char buffer[MAX_LINE_LEN+1];
                         strncpy(buffer, line, sizeof(buffer));
 
                         char *word = strtok(buffer, " ");
@@ -139,7 +139,6 @@ static void fmt(const char *file_name, char *output, Settings *s)
                         }
                 } else {
                         char *ln_ptr = line;
-
                         while (*ln_ptr != '\0')
                                 write(&output, &ln_ptr);
                 }
