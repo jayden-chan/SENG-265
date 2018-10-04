@@ -273,7 +273,7 @@ static bool file_exists(const char *file_name)
 static void print_buffer(char *buffer)
 {
 #ifdef DEBUG
-                printf("--- BEGIN BUFFER DUMP ---\n");
+        printf("--- BEGIN BUFFER DUMP ---\n");
 #endif
 
         /* Advance the pointer through the buffer until it
@@ -285,11 +285,10 @@ static void print_buffer(char *buffer)
 
         /* Add a newline at the end */
 #ifdef DEBUG
-                printf("[0]");
+        printf("[0]");
 #endif
         printf("\n");
-
 #ifdef DEBUG
-                printf("--- END BUFFER DUMP ---\n");
+        printf("--- END BUFFER DUMP ---\n");
 #endif
 }
