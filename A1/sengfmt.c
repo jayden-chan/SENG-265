@@ -125,14 +125,12 @@ static void fmt(const char *file_name, char *output, Settings *s)
                                         curr_width = 0;
                                 }
 
-                                if (curr_width == 0) {
+                                if (curr_width == 0)
                                         write_spaces(&output, s->mrgn);
-                                }
 
                                 char *wrd_ptr = word;
-                                for (int i = 0; i < (int) strlen(word); i++) {
+                                for (int i = 0; i < (int) strlen(word); i++)
                                         write(&output, &wrd_ptr);
-                                }
 
                                 write_char(&output, ' ');
                                 curr_width += (int) strlen(word) + 1;
@@ -142,9 +140,8 @@ static void fmt(const char *file_name, char *output, Settings *s)
                 } else {
                         char *ln_ptr = line;
 
-                        while (*ln_ptr != '\0') {
+                        while (*ln_ptr != '\0')
                                 write(&output, &ln_ptr);
-                        }
                 }
         }
 
@@ -195,14 +192,14 @@ static void handle_qm(char *word, Settings *s)
  */
 static void trim(char *input)
 {
-        while (*input != '\0') {
+        while (*input != '\0')
                 input++;
-        }
+
         input--;
 
-        while (isspace(*input)) {
+        while (isspace(*input))
                 input--;
-        }
+
         input++;
         *input = '\0';
 }
@@ -229,9 +226,8 @@ static inline void write(char **dest, char **source)
  */
 static inline void write_spaces(char **output, int spaces)
 {
-        for (int i = 0; i < spaces; i++) {
+        for (int i = 0; i < spaces; i++)
                 write_char(output, ' ');
-        }
 }
 
 /**
@@ -277,26 +273,22 @@ static bool file_exists(const char *file_name)
  */
 static void print_buffer(char *buffer, const bool debug)
 {
-        if (debug) {
+        if (debug)
                 printf("--- BEGIN BUFFER DUMP ---\n");
-        }
 
         /* Advance the pointer through the buffer until it
          * reaches the null terminator, printing each character
          * as we go
          */
-        while (*buffer != '\0') {
+        while (*buffer != '\0')
                 printf("%c", *buffer++);
-        }
 
         /* Add a newline at the end */
-        if (debug) {
+        if (debug)
                 printf("[0]");
-        }
 
         printf("\n");
 
-        if (debug) {
+        if (debug)
                 printf("--- END BUFFER DUMP ---\n");
-        }
 }
