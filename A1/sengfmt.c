@@ -120,7 +120,7 @@ static void fmt(const char *file_name, char *output, Settings *s)
                         while (word != NULL) {
                                 trim(word);
 
-                                if (curr_width + s->mrgn + strlen(word) > s->width) {
+                                if (curr_width + s->mrgn + strlen(word) > (size_t) s->width) {
                                         output--;
                                         write_char(&output, '\n');
                                         curr_width = 0;
@@ -131,7 +131,7 @@ static void fmt(const char *file_name, char *output, Settings *s)
                                 }
 
                                 char *wrd_ptr = word;
-                                for (int i = 0; i < strlen(word); i++) {
+                                for (int i = 0; (size_t) i < strlen(word); i++) {
                                         write(&output, &wrd_ptr);
                                 }
 
