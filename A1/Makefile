@@ -1,5 +1,6 @@
 CFLAGS = -Wall -std=c99
 PEDANTIC = -Wextra -Wpedantic -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion
+DEBUG = -D DEBUG -g
 
 default: build
 
@@ -12,7 +13,7 @@ pedantic:
 	gcc $(CFLAGS) $(PEDANTIC) sengfmt.c -o sengfmt
 
 debug:
-	gcc $(CFLAGS) -g sengfmt.c -o sengfmt
+	gcc $(CFLAGS) $(DEBUG) sengfmt.c -o sengfmt
 
 clean:
 	rm ./sengfmt

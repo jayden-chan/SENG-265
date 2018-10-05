@@ -173,7 +173,7 @@ static void handle_qm(char *word, Settings *s)
                 word = strtok(NULL, " ");
         } else if (s->fmt && !strcmp(word, "?mrgn")) {
                 word = strtok(NULL, " ");
-                s->mrgn = atoi(word);
+                s->mrgn = (int) strtol(word, NULL, 10);
                 word = strtok(NULL, " ");
         } else if (!strcmp(word, "?fmt")) {
                 word = strtok(NULL, " ");
