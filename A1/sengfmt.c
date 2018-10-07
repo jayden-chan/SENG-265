@@ -35,7 +35,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_LINES 300 
+#define MAX_LINES 300
 #define MAX_LINE_LEN 132
 
 #define WRITE(X, Y) *(*X)++ = *(*Y)++;
@@ -117,7 +117,9 @@ static void fmt(const char *file_name, char *output, Settings *s)
                         char *word = strtok(line, " \n");
 
                         while (word != NULL) {
-                                if (curr_width + s->mrgn + (int) strlen(word) > s->width) {
+                                if (curr_width + s->mrgn
+                                                + (int) strlen(word)
+                                                > s->width) {
                                         output--;
                                         WRITE_CHAR(&output, '\n');
                                         curr_width = 0;
