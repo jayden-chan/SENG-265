@@ -38,11 +38,11 @@
 #define MAX_BUF_LEN 39600
 #define MAX_LINE_LEN 132
 
-#define write(X, Y) *(*X)++ = *(*Y)++;
-#define write_char(X, Y) *(*X)++ = Y;
+#define WRITE(X, Y) *(*X)++ = *(*Y)++;
+#define WRITE_CHAR(X, Y) *(*X)++ = Y;
 
-#define write_spaces(X, Y) for (int i = 0; i < Y; i++)\
-                                        write_char(X, ' ');
+#define WRITE_SPACES(X, Y) for (int i = 0; i < Y; i++)\
+                                        WRITE_CHAR(X, ' ');
 /**
  * The Settings struct stores the formatting flags
  * found in the supplied text file.
@@ -56,7 +56,6 @@ typedef struct Settings {
 /* Function prototypes */
 static void fmt(const char *file_name, char *output, Settings *s);
 static void handle_qm(char *word, Settings *s);
-static void trim(char *input);
 static bool file_exists(const char *file_name);
 static void print_buffer(char *buffer);
 
@@ -108,8 +107,8 @@ static void fmt(const char *file_name, char *output, Settings *s)
 
                 if (line[0] == '\n') {
                         output--;
-                        write_char(&output, '\n');
-                        write_char(&output, '\n');
+                        WRITE_CHAR(&output, '\n');
+                        WRITE_CHAR(&output, '\n');
                         curr_width = 0;
                         continue;
                 }
@@ -120,18 +119,18 @@ static void fmt(const char *file_name, char *output, Settings *s)
                         while (word != NULL) {
                                 if (curr_width + s->mrgn + (int) strlen(word) > s->width) {
                                         output--;
-                                        write_char(&output, '\n');
+                                        WRITE_CHAR(&output, '\n');
                                         curr_width = 0;
                                 }
 
                                 if (curr_width == 0)
-                                        write_spaces(&output, s->mrgn);
+                                        WRITE_SPACES(&output, s->mrgn);
 
                                 char *wrd_ptr = word;
                                 for (int i = 0; i < (int) strlen(word); i++)
-                                        write(&output, &wrd_ptr);
+                                        WRITE(&output, &wrd_ptr);
 
-                                write_char(&output, ' ');
+                                WRITE_CHAR(&output, ' ');
                                 curr_width += (int) strlen(word) + 1;
 
                                 word = strtok(NULL, " \n");
@@ -139,7 +138,7 @@ static void fmt(const char *file_name, char *output, Settings *s)
                 } else {
                         char *ln_ptr = line;
                         while (*ln_ptr != '\0')
-                                write(&output, &ln_ptr);
+                                WRITE(&output, &ln_ptr);
                 }
         }
 
