@@ -38,6 +38,11 @@
 #define MAX_BUF_LEN 39600
 #define MAX_LINE_LEN 132
 
+#define write(X, Y) *(*X)++ = *(*Y)++;
+#define write_char(X, Y) *(*X)++ = Y;
+
+#define write_spaces(X, Y) for (int i = 0; i < Y; i++)\
+                                        write_char(X, ' ');
 /**
  * The Settings struct stores the formatting flags
  * found in the supplied text file.
@@ -54,10 +59,6 @@ static void handle_qm(char *word, Settings *s);
 static void trim(char *input);
 static bool file_exists(const char *file_name);
 static void print_buffer(char *buffer);
-
-static inline void write(char **dest, char **source);
-static inline void write_spaces(char **output, int spaces);
-static inline void write_char(char **output, const char ch);
 
 /* Entry point for the program */
 int main(int argc, char *argv[])
@@ -100,7 +101,7 @@ static void fmt(const char *file_name, char *output, Settings *s)
                         char buffer[MAX_LINE_LEN+1];
                         strncpy(buffer, line, sizeof(buffer));
 
-                        char *word = strtok(buffer, " ");
+                        char *word = strtok(buffer, " \n");
                         handle_qm(word, s);
                         continue;
                 }
@@ -114,11 +115,9 @@ static void fmt(const char *file_name, char *output, Settings *s)
                 }
 
                 if (s->fmt) {
-                        char *word = strtok(line, " ");
+                        char *word = strtok(line, " \n");
 
                         while (word != NULL) {
-                                trim(word);
-
                                 if (curr_width + s->mrgn + (int) strlen(word) > s->width) {
                                         output--;
                                         write_char(&output, '\n');
@@ -135,7 +134,7 @@ static void fmt(const char *file_name, char *output, Settings *s)
                                 write_char(&output, ' ');
                                 curr_width += (int) strlen(word) + 1;
 
-                                word = strtok(NULL, " ");
+                                word = strtok(NULL, " \n");
                         }
                 } else {
                         char *ln_ptr = line;
@@ -144,7 +143,7 @@ static void fmt(const char *file_name, char *output, Settings *s)
                 }
         }
 
-        trim(output);
+        *(output-1) = '\0';
         fclose(file);
 }
 
@@ -163,83 +162,21 @@ static void fmt(const char *file_name, char *output, Settings *s)
  */
 static void handle_qm(char *word, Settings *s)
 {
-        trim(word);
-
         if (!strcmp(word, "?width")) {
-                word = strtok(NULL, " ");
+                word = strtok(NULL, " \n");
                 s->width = atoi(word);
                 s->fmt = true;
                 s->mrgn = 0;
-                word = strtok(NULL, " ");
+                word = strtok(NULL, " \n");
         } else if (s->fmt && !strcmp(word, "?mrgn")) {
-                word = strtok(NULL, " ");
+                word = strtok(NULL, " \n");
                 s->mrgn = (int) strtol(word, NULL, 10);
-                word = strtok(NULL, " ");
+                word = strtok(NULL, " \n");
         } else if (!strcmp(word, "?fmt")) {
-                word = strtok(NULL, " ");
-                trim(word);
+                word = strtok(NULL, " \n");
                 s->fmt = strcmp(word, "off");
-                word = strtok(NULL, " ");
+                word = strtok(NULL, " \n");
         }
-}
-
-/**
- * trim removes the trailing whitespace from
- * a given input buffer
- *
- * @param input The buffer to trim
- */
-static void trim(char *input)
-{
-        while (*input != '\0')
-                input++;
-
-        input--;
-
-        while (isspace(*input))
-                input--;
-
-        input++;
-        *input = '\0';
-}
-
-/**
- * write copies the character at the source pointer into
- * the location of the destination pointer, incrementing
- * both pointers after.
- *
- * @param dest   The destination location
- * @param source The source location
- */
-static inline void write(char **dest, char **source)
-{
-        *(*dest)++ = *(*source)++;
-}
-
-/**
- * write_spaces writes the specified number of
- * spaces into the provided output buffer
- *
- * @param output The output buffer
- * @param spaces The number of spaces
- */
-static inline void write_spaces(char **output, int spaces)
-{
-        for (int i = 0; i < spaces; i++)
-                write_char(output, ' ');
-}
-
-/**
- * write_char writes the provided character
- * into the provided output buffer and increments
- * the output pointer by one
- *
- * @param output The output buffer
- * @param ch     The character to write
- */
-static inline void write_char(char **output, const char ch)
-{
-        *(*output)++ = ch;
 }
 
 /**
