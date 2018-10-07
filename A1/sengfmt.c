@@ -35,7 +35,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_BUF_LEN 39600
+#define MAX_LINES 300 
 #define MAX_LINE_LEN 132
 
 #define WRITE(X, Y) *(*X)++ = *(*Y)++;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
         }
 
         Settings s = {0, 0, false};
-        char output[MAX_BUF_LEN+1];
+        char output[MAX_LINE_LEN * MAX_LINES + 1];
 
         fmt(argv[1], output, &s);
         print_buffer(output);
