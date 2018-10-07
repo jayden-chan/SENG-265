@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-        Settings s;
+        Settings s = {0, 0, false};
         char output[MAX_BUF_LEN+1];
 
         fmt(argv[1], output, &s);
