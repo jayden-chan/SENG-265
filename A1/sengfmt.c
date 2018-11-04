@@ -63,7 +63,7 @@ static void print_buffer(char *buffer);
 int main(int argc, char *argv[])
 {
         if (argc < 2) {
-                fprintf(stderr, "Not enough arguments. You must specify a file.\n");
+                fprintf(stderr, "You must specify a file.\n");
                 return EXIT_FAILURE;
         }
 
