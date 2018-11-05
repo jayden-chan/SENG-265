@@ -41,7 +41,6 @@ def main():
                 else:
                     mrgn[0] = int(tokens[1])
 
-                del tokens[:1]
 
                 if width != -1 and mrgn[-1] > width - 20:
                     mrgn[-1] = width - 20
@@ -52,15 +51,12 @@ def main():
             elif tokens[0] == "?maxwidth":
                 width = int(tokens[1])
                 fmt = True
-                del tokens[:1]
                 continue
             elif tokens[0] == "?fmt":
                 fmt = tokens[1] == "on"
-                del tokens[:1]
                 continue
             elif tokens[0] == "?cap":
                 cap = tokens[1] == "on"
-                del tokens[:1]
                 continue
 
         if not fmt and line != "\n":
