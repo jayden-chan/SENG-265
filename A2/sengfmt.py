@@ -28,20 +28,21 @@ def main():
             tokens = line.split(" ")
 
             if tokens[0] == "?mrgn":
-                del tokens[0]
-                if tokens[0].startswith("+"):
+                if tokens[1].startswith("+"):
                     if q.qsize() > 0:
-                        mrgn.append(mrgn[-1] + int(tokens[0][1:]))
+                        mrgn.append(mrgn[-1] + int(tokens[1][1:]))
                     else:
-                        mrgn[0] += int(tokens[0][1:])
-                elif tokens[0].startswith("-"):
+                        mrgn[0] += int(tokens[1][1:])
+                elif tokens[1].startswith("-"):
                     if q.qsize() > 0:
-                        mrgn.append(mrgn[-1] - int(tokens[0][1:]))
+                        mrgn.append(mrgn[-1] - int(tokens[1][1:]))
                     else:
-                        mrgn[0] -= int(tokens[0][1:])
+                        mrgn[0] -= int(tokens[1][1:])
                 else:
-                    mrgn[0] = int(tokens[0])
-                del tokens[0]
+                    mrgn[0] = int(tokens[1])
+
+                del tokens[:1]
+
                 if width != -1 and mrgn[-1] > width - 20:
                     mrgn[-1] = width - 20
                 if mrgn[-1] < 0:
@@ -49,26 +50,17 @@ def main():
                 fmt = True
                 continue
             elif tokens[0] == "?maxwidth":
-                del tokens[0]
-                width = int(tokens[0])
+                width = int(tokens[1])
                 fmt = True
-                del tokens[0]
+                del tokens[:1]
                 continue
             elif tokens[0] == "?fmt":
-                del tokens[0]
-                if tokens[0] == "on":
-                    fmt = True
-                else:
-                    fmt = False
-                del tokens[0]
+                fmt = tokens[1] == "on"
+                del tokens[:1]
                 continue
             elif tokens[0] == "?cap":
-                del tokens[0]
-                if tokens[0] == "on":
-                    cap = True
-                else:
-                    cap = False
-                del tokens[0]
+                cap = tokens[1] == "on"
+                del tokens[:1]
                 continue
 
         if not fmt and line != "\n":
@@ -115,7 +107,6 @@ def unload(q, qsize, width, cap, mrgn):
     num_spaces = width - mrgn[0] - qsize - q.qsize() + 1
     ctr = 0
 
-    # print("num spaces: ", num_spaces)
     while q.qsize() > 1 and num_spaces > 0:
         space_array[ctr % (q.qsize()-1)] += 1
         ctr += 1
@@ -129,7 +120,6 @@ def unload(q, qsize, width, cap, mrgn):
         else:
             print(q.get(), end = '')
 
-        # print("ctr ", ctr)
         if ctr < len(space_array):
             print(space_array[ctr] * ' ', end = '')
             ctr += 1
