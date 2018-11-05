@@ -53,7 +53,7 @@ do
         continue
     fi
 
-    python $execname $testpath/in$f.txt > out.txt
+    python3 $execname $testpath/in$f.txt > out.txt
 
     result=$(diff out.txt test/out$f.txt)
 
