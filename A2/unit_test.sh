@@ -13,8 +13,7 @@ if [[ $1 != "" ]]; then
         echo "Test $f: PASS"
     else
         echo "Test $f: FAIL"
-        echo "diff output:"
-        echo $result
+        echo "diff output:\n$result"
     fi
     exit
 fi
