@@ -14,7 +14,7 @@ def main():
     cap = False
     q = queue.Queue()
     qsize = 0
-    mrgn = [0]
+    mrgn = 0
     width = -1
 
     if len(sys.argv) > 1:
@@ -29,23 +29,16 @@ def main():
 
             if tokens[0] == "?mrgn":
                 if tokens[1].startswith("+"):
-                    if q.qsize() > 0:
-                        mrgn.append(mrgn[-1] + int(tokens[1][1:]))
-                    else:
-                        mrgn[0] += int(tokens[1][1:])
+                    mrgn += int(tokens[1][1:])
                 elif tokens[1].startswith("-"):
-                    if q.qsize() > 0:
-                        mrgn.append(mrgn[-1] - int(tokens[1][1:]))
-                    else:
-                        mrgn[0] -= int(tokens[1][1:])
+                    mrgn -= int(tokens[1][1:])
                 else:
-                    mrgn[0] = int(tokens[1])
+                    mrgn = int(tokens[1])
 
-
-                if width != -1 and mrgn[-1] > width - 20:
-                    mrgn[-1] = width - 20
-                if mrgn[-1] < 0:
-                    mrgn[-1] = 0
+                if width != -1 and mrgn > width - 20:
+                    mrgn = width - 20
+                if mrgn < 0:
+                    mrgn = 0
                 fmt = True
                 continue
             elif tokens[0] == "?maxwidth":
@@ -65,7 +58,7 @@ def main():
 
         if width == -1:
             if fmt and line != "\n":
-                print(mrgn[0] * ' ', end='')
+                print(mrgn * ' ', end='')
 
             print(line, end='')
             continue
@@ -83,7 +76,7 @@ def main():
             if token == "":
                 continue
 
-            if width == -1 or len(token) + qsize + q.qsize() + mrgn[0] <= width:
+            if width == -1 or len(token) + qsize + q.qsize() + mrgn <= width:
                 q.put(token)
                 qsize += len(token)
             else:
@@ -100,7 +93,7 @@ def unload(q, qsize, width, cap, mrgn):
     if qsize == 0:
         return
     space_array = [1] * (q.qsize() - 1)
-    num_spaces = width - mrgn[0] - qsize - q.qsize() + 1
+    num_spaces = width - mrgn - qsize - q.qsize() + 1
     ctr = 0
 
     while q.qsize() > 1 and num_spaces > 0:
@@ -109,7 +102,7 @@ def unload(q, qsize, width, cap, mrgn):
         num_spaces -= 1
 
     ctr = 0
-    print(mrgn[0] * ' ', end='')
+    print(mrgn * ' ', end='')
     while not q.empty():
         if cap:
             print(q.get().upper(), end = '')
@@ -121,8 +114,6 @@ def unload(q, qsize, width, cap, mrgn):
             ctr += 1
 
     print()
-    if len(mrgn) > 1:
-        del mrgn[0]
 
 if __name__ == "__main__":
     main()

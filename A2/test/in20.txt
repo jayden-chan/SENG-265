@@ -92,8 +92,7 @@ gasp:
 ?mrgn 30
                      "EPICUYUS TO HEYMACHUS, health.
 
-?mrgn 0
-?mrgn +5
+?mrgn 5
      "Whilst I was passing over the happy and last day of my life, I
      write this, but, at the same time, afflicted with such pain in my
      bladder and bowels that nothing can be greater, but it was
