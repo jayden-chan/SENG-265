@@ -88,10 +88,10 @@ class Formatter:
                 continue
 
             line = line.strip()
-            if rep is not None:
+            if rep is not None and fmt:
                 line = re.sub(rep[0], rep[1], line)
 
-            if mon:
+            if mon and fmt:
                 line = self.replace_date(line)
 
             tokens = line.split(" ")
@@ -144,8 +144,7 @@ class Formatter:
         self.lines.append(line)
 
     def replace_date(self, string):
-        pattern = r"(\d\d)[\/\-\.](\d\d)[\/\-\.](\d\d\d\d)"
-        matches = re.search(pattern, string)
+        matches = re.search(r"(\d\d)[\/\-\.](\d\d)[\/\-\.](\d\d\d\d)", string)
         if matches is None:
             return string
-        return re.sub(pattern, "{0}. {1}, {2}".format(calendar.month_abbr[int(matches.group(1))], matches.group(2), matches.group(3)), string)
+        return re.sub(r"(\d\d)[\/\-\.](\d\d)[\/\-\.](\d\d\d\d)", "{0}. {1}, {2}".format(calendar.month_abbr[int(matches.group(1))], matches.group(2), matches.group(3)), string)
