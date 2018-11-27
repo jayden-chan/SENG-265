@@ -1,4 +1,3 @@
-?maxwidth 24
-?mrgn 4
+?fmt on
 ?replace What You
 What must acknowledgment should be

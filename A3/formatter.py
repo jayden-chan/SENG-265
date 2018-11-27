@@ -72,6 +72,12 @@ class Formatter:
                 self.lines.append(line)
                 continue
 
+            if rep is not None:
+                line = re.sub(rep[0], rep[1], line)
+
+            if mon:
+                line = self.replace_date(line)
+
             if width == -1:
                 tmp = ""
                 if fmt and line != "\n":
@@ -88,12 +94,6 @@ class Formatter:
                 continue
 
             line = line.strip()
-            if rep is not None and fmt:
-                line = re.sub(rep[0], rep[1], line)
-
-            if mon and fmt:
-                line = self.replace_date(line)
-
             tokens = line.split(" ")
 
             for token in tokens:

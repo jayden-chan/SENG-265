@@ -1,5 +1,4 @@
-?maxwidth 50
-?mrgn 10
+?fmt on
 ?replace =.*?= SPAM 
 ?monthabbr on
 Attention: =TITLE= Having 
