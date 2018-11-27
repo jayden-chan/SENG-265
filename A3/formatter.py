@@ -2,6 +2,8 @@
 
 import sys
 import queue
+import re
+import calendar
 
 class Formatter:
     """This is the definition for the class"""
@@ -20,10 +22,12 @@ class Formatter:
 
         fmt = False
         cap = False
+        mon = False
         q = queue.Queue()
         qsize = 0
         mrgn = 0
         width = -1
+        rep = None
 
         for line in file:
             if line.startswith("?"):
@@ -54,25 +58,42 @@ class Formatter:
                 elif tokens[0] == "?cap":
                     cap = tokens[1] == "on"
                     continue
+                elif tokens[0] == "?monthabbr":
+                    mon = tokens[1] == "on"
+                    continue
+                elif tokens[0] == "?replace":
+                    rep = []
+                    rep.append(tokens[1])
+                    rep.append(tokens[2])
+                    continue
+
 
             if not fmt and line != "\n":
-                print(line, end='')
+                self.lines.append(line)
                 continue
 
             if width == -1:
+                tmp = ""
                 if fmt and line != "\n":
-                    print(mrgn * ' ', end='')
+                    tmp += (mrgn * ' ')
 
-                print(line, end='')
+                tmp += (line)
+                self.lines.append(tmp)
                 continue
 
             if line == "\n":
                 self.unload(q, qsize, width, cap, mrgn)
                 qsize = 0
-                print()
+                self.lines.append("\n")
                 continue
 
             line = line.strip()
+            if rep is not None:
+                line = re.sub(rep[0], rep[1], line)
+
+            if mon:
+                line = self.replace_date(line)
+
             tokens = line.split(" ")
 
             for token in tokens:
@@ -91,10 +112,11 @@ class Formatter:
         if width != -1:
             self.unload(q, qsize, width, cap, mrgn)
 
-        return "this is formatted"
+        return self.lines
 
 
     def unload(self, q, qsize, width, cap, mrgn):
+        line = ""
         if qsize == 0:
             return
         space_array = [1] * (q.qsize() - 1)
@@ -107,15 +129,23 @@ class Formatter:
             num_spaces -= 1
 
         ctr = 0
-        print(mrgn * ' ', end='')
+        line += (mrgn * ' ')
         while not q.empty():
             if cap:
-                print(q.get().upper(), end = '')
+                line += (q.get().upper())
             else:
-                print(q.get(), end = '')
+                line += (q.get())
 
             if ctr < len(space_array):
-                print(space_array[ctr] * ' ', end = '')
+                line += (space_array[ctr] * ' ')
                 ctr += 1
 
-        print()
+        line += "\n"
+        self.lines.append(line)
+
+    def replace_date(self, string):
+        pattern = r"(\d\d)[\/\-\.](\d\d)[\/\-\.](\d\d\d\d)"
+        matches = re.search(pattern, string)
+        if matches is None:
+            return string
+        return re.sub(pattern, "{0}. {1}, {2}".format(calendar.month_abbr[int(matches.group(1))], matches.group(2), matches.group(3)), string)
