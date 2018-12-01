@@ -17,7 +17,7 @@ def main():
     lines = f.get_lines()
 
     for line in lines:
-        print(line, end='')
+        print(line)
 
 if __name__ == "__main__":
     main()

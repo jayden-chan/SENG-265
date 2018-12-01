@@ -67,8 +67,9 @@ class Formatter:
                     rep.append(tokens[2])
                     continue
 
-
             if not fmt and line != "\n":
+                if line[-1] == "\n":
+                    line = line[:-1]
                 self.lines.append(line)
                 continue
 
@@ -83,6 +84,8 @@ class Formatter:
                 if fmt and line != "\n":
                     tmp += (mrgn * ' ')
 
+                if line[-1] == "\n":
+                    line = line[:-1]
                 tmp += (line)
                 self.lines.append(tmp)
                 continue
@@ -90,7 +93,7 @@ class Formatter:
             if line == "\n":
                 self.unload(q, qsize, width, cap, mrgn)
                 qsize = 0
-                self.lines.append("\n")
+                self.lines.append("")
                 continue
 
             line = line.strip()
@@ -140,7 +143,7 @@ class Formatter:
                 line += (space_array[ctr] * ' ')
                 ctr += 1
 
-        line += "\n"
+        # line += "\n"
         self.lines.append(line)
 
     def replace_date(self, string):
