@@ -119,10 +119,33 @@ void mtf_encode(char *msg, int size, int *code)
  */
 int run_length_decode(int *code, int size, int *msg)
 {
-        /****** To be completed ******/
+        int curr = 0;
+        int output_index = 0;
+        int length = 0;
+
+        while (curr < size) {
+                if (code[curr] == 0) {
+                        for (int i = 0; i < code[curr+1]; i++) {
+                                msg[output_index++] = 1;
+                        }
+
+                        curr++;
+                } else {
+                        msg[output_index++] = code[curr];
+                }
+
+                curr++;
+        }
+
+        /* int new = 0; */
+
+        /* while (new < output_index) { */
+        /*         printf("%d ", msg[new++]); */
+        /* } */
+        /* printf("\n"); */
 
         /* the new length of the array must be returned */
-        return 0;
+        return output_index;
 }
 
 
@@ -135,14 +158,29 @@ int run_length_decode(int *code, int size, int *msg)
  */
 int run_length_encode(int *msg, int size, int *code)
 {
-        /****** To be completed ******/
+        int curr = 0;
+        int output_index = 0;
 
-        /* the new length of the array must be returned */
-        return 0;
+        while (curr < size) {
+                if (msg[curr] == 1 && curr < size-2 && msg[curr+1] == 1 && msg[curr+2] == 1) {
+                        code[output_index++] = 0;
+
+                        int count = 1;
+                        while (curr < size-1 && msg[curr+1] == 1) {
+                                curr++;
+                                count++;
+                        }
+
+                        code[output_index++] = count;
+                } else {
+                        code[output_index++] = msg[curr];
+                }
+
+                curr++;
+        }
+
+        return output_index;
 }
-
-
-
 
 /* This function is implemented to check if the run_length
  * encoded message can be recovered correctly.
@@ -153,11 +191,22 @@ int run_length_encode(int *msg, int size, int *code)
  */
 int check_run_length(int *msg, int size, int *code)
 {
-        /****** To be completed ******/
+        int *msg2 = (int *) malloc(sizeof(int) * size);
+        int val = 1; /* True: 1, False: 0 */
 
-        /* You can take the check_mtf() function as an example*/
+        /* check decode of mtf */
+        int new_size = run_length_decode(code, size, msg2);
 
-        return 0;
+        for (int i = 0; i < new_size; i++) {
+                if (msg[i] != msg2[i]) {
+                        val = 0;
+                        break;
+                }
+        }
+
+        free(msg2);
+
+        return val;
 }
 
 int check_mtf(char *msg, int size, int *code)
@@ -284,7 +333,21 @@ int main(int argc, char *argv[])
 {
         simple_test();
         /* uncomment the following line before you submit */
-        /* run_length_test(); */
+        run_length_test();
+
+        int test[10] = {1, 1, 1, 1, 1, 2, 3, 4, 5, 6};
+        int size = 10;
+        int out[20];
+
+        int new = 0;
+
+        while (new < size) {
+                printf("%d ", test[new++]);
+        }
+        printf("\n");
+
+        int new_size = run_length_encode(test, size, out);
+        run_length_decode(out, new_size, test);
 
         return 0;
 }
