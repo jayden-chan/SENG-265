@@ -1,0 +1,16 @@
+Errors:
+
+If a zero is included in the MTF encoding as an index and not
+to represent repeated 1s, the encoder will assume it is for repeated
+ones. There is no way for the encoder to handle this and it must be
+assumed that the input is clean.
+
+If an extremely large text file is used as the input, the memory
+allocation requests might fail. This is handled in some of the provided
+functions but not in mine. A simple solution would be to check if the
+pointer returned by malloc is NULL and report the error accordingly.
+
+If the size of the text file exceeds the maximum message size as defined
+at the top of the program, a segfault will likely occur during the encoding
+process. This can be prevented by checking the length of the file before doing
+any processing on it and stopping the program if it's too large.

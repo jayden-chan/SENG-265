@@ -335,19 +335,5 @@ int main(int argc, char *argv[])
         /* uncomment the following line before you submit */
         run_length_test();
 
-        int test[10] = {1, 1, 1, 1, 1, 2, 3, 4, 5, 6};
-        int size = 10;
-        int out[20];
-
-        int new = 0;
-
-        while (new < size) {
-                printf("%d ", test[new++]);
-        }
-        printf("\n");
-
-        int new_size = run_length_encode(test, size, out);
-        run_length_decode(out, new_size, test);
-
         return 0;
 }
